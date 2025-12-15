@@ -2,19 +2,27 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>NBV Admin - Gerador de Clientes</title>
+    <title>NBV Admin - Fábrica de Sites</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <style>body { padding-top: 20px; max-width: 800px; margin: 0 auto; }</style>
+    <style>
+        body { padding-top: 20px; max-width: 800px; margin: 0 auto; background: #0d1117; color: #c9d1d9; }
+        .card { background: #161b22; border: 1px solid #30363d; padding: 25px; border-radius: 8px; }
+        input, textarea { background: #010409; color: white; border: 1px solid #30363d; padding: 10px; width: 100%; border-radius: 6px; box-sizing: border-box; }
+        label { margin-top: 15px; display: block; font-weight: bold; color: #58a6ff; }
+        button { margin-top: 20px; width: 100%; padding: 15px; background: #238636; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:hover { background: #2ea043; }
+        #log-area { margin-top: 20px; font-family: monospace; font-size: 0.9em; color: #8b949e; }
+    </style>
 </head>
 <body>
     <div class="card">
-        <h1>⚙️ Gerador Studio NBV</h1>
-        <p>Preencha os dados e clique em "Gerar Pacote do Cliente".</p>
+        <h1 style="text-align:center">🏭 Fábrica de Sites NBV</h1>
+        <p style="text-align:center; margin-bottom:30px">Preencha os dados e gere o ZIP pronto para o Netlify.</p>
         
-        <label>Nome do Cliente</label>
-        <input type="text" id="cliName" placeholder="Ex: Maria e João">
+        <label>Nome do Cliente (Será o nome do arquivo ZIP)</label>
+        <input type="text" id="cliName" placeholder="Ex: Casamento Maria e Joao">
 
         <label>Links das Fotos (Alta Resolução - Um por linha)</label>
         <textarea id="cliFotos" rows="5" placeholder="https://..."></textarea>
@@ -30,7 +38,7 @@
             </div>
         </div>
 
-        <h3>Logística</h3>
+        <h3>🚚 Logística</h3>
         <label>Taxa de Envio/Transportadora (R$)</label>
         <input type="number" id="taxaEnvio" value="30.00">
         
@@ -39,53 +47,94 @@
 Balcão Ibema (Centro)
 Turvo (Praça Central)</textarea>
 
-        <h3>Financeiro</h3>
+        <h3>💰 Financeiro</h3>
         <label>Desconto Pix (%)</label>
         <input type="number" id="descPix" value="5">
         
         <label>Juros Maquininha (Separar por vírgula: 1x, 2x... 12x)</label>
         <input type="text" id="jurosTable" value="0, 4.59, 5.99, 7.49, 8.99, 10.49, 11.99, 13.49, 14.99, 16.49, 17.99, 21.00">
 
-        <button class="btn btn-primary" onclick="gerarPacote()">📦 BAIXAR PACOTE DO CLIENTE (.ZIP)</button>
+        <button onclick="gerarPacoteCompleto()">📦 GERAR SITE COMPLETO (.ZIP)</button>
+        
+        <div id="log-area"></div>
     </div>
 
     <script>
-        function gerarPacote() {
-            const zip = new JSZip();
-            
-            // Pega os dados
-            const config = {
-                cliente: document.getElementById('cliName').value,
-                fotos: document.getElementById('cliFotos').value.split('\n').filter(x => x.trim()),
-                pacote: { 
-                    incluso: Number(document.getElementById('cliInc').value),
-                    extra: Number(document.getElementById('cliExtra').value)
-                },
-                logistica: {
-                    envio: Number(document.getElementById('taxaEnvio').value),
-                    locais: document.getElementById('locaisRetirada').value.split('\n').filter(x => x.trim())
-                },
-                financeiro: {
-                    pixDesc: Number(document.getElementById('descPix').value),
-                    juros: document.getElementById('jurosTable').value.split(',').map(Number)
-                }
-            };
+        // Lista dos arquivos do sistema que devem ser copiados para o ZIP
+        const arquivosDoSistema = [
+            'index.html',
+            'style.css',
+            'js/core.js',
+            'js/mod_aprovacao.js',
+            'js/mod_producao.js',
+            'js/mod_entrega.js',
+            'js/mod_pagamento.js'
+        ];
 
-            // Gera o arquivo de configuração JS
-            const configJS = `window.NBV_CONFIG = ${JSON.stringify(config, null, 2)};`;
+        async function gerarPacoteCompleto() {
+            const log = document.getElementById('log-area');
+            const btn = document.querySelector('button');
+            const nomeCliente = document.getElementById('cliName').value || 'cliente';
             
-            // Adiciona ao ZIP (NÃO ADICIONA OS ARQUIVOS DO SISTEMA, O CLIENTE BAIXA DO GITHUB)
-            // OBS: Warrior, aqui a lógica é: você baixa o ZIP com o "config_cliente.js"
-            // e coloca na pasta do Netlify junto com os arquivos do sistema que vou te passar na Parte 2.
-            
-            // Melhor: O Admin gera APENAS o config.js.
-            // Você terá uma pasta "Mestre" no seu PC com o sistema.
-            // Para cada cliente, você copia a pasta Mestre, joga esse config.js dentro e sobe.
-            
-            const blob = new Blob([configJS], {type: "text/javascript;charset=utf-8"});
-            saveAs(blob, "config_cliente.js");
-            
-            alert("Arquivo 'config_cliente.js' gerado! Coloque-o na mesma pasta do index.html.");
+            // Validação simples
+            if(!document.getElementById('cliFotos').value) return alert("Cole os links das fotos!");
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Gerando ZIP... aguarde.";
+            log.innerHTML = "Iniciando processo...<br>";
+
+            try {
+                const zip = new JSZip();
+
+                // 1. Gera o arquivo de Configuração Dinâmico
+                const config = {
+                    cliente: nomeCliente,
+                    fotos: document.getElementById('cliFotos').value.split('\n').filter(x => x.trim()),
+                    pacote: { 
+                        incluso: Number(document.getElementById('cliInc').value),
+                        extra: Number(document.getElementById('cliExtra').value)
+                    },
+                    logistica: {
+                        envio: Number(document.getElementById('taxaEnvio').value),
+                        locais: document.getElementById('locaisRetirada').value.split('\n').filter(x => x.trim())
+                    },
+                    financeiro: {
+                        pixDesc: Number(document.getElementById('descPix').value),
+                        juros: document.getElementById('jurosTable').value.split(',').map(Number)
+                    }
+                };
+                const configJS = `window.NBV_CONFIG = ${JSON.stringify(config, null, 2)};`;
+                zip.file("config_cliente.js", configJS);
+                log.innerHTML += "✅ Configuração gerada.<br>";
+
+                // 2. Busca e copia os arquivos do sistema (index, css, js)
+                for (const arquivo of arquivosDoSistema) {
+                    try {
+                        const response = await fetch(arquivo);
+                        if (!response.ok) throw new Error(`Não achei: ${arquivo}`);
+                        const texto = await response.text();
+                        zip.file(arquivo, texto);
+                        log.innerHTML += `✅ Copiado: ${arquivo}<br>`;
+                    } catch (err) {
+                        throw new Error(`Erro ao ler arquivo '${arquivo}'. Você está rodando com Live Server? Erro: ${err.message}`);
+                    }
+                }
+
+                // 3. Gera o arquivo final
+                const content = await zip.generateAsync({type:"blob"});
+                saveAs(content, `Site_${nomeCliente.replace(/\s+/g, '_')}.zip`);
+                
+                log.innerHTML += "🚀 ZIP Gerado com sucesso! Verifique seus downloads.";
+                btn.innerText = "📦 GERAR SITE COMPLETO (.ZIP)";
+                btn.disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                alert("ERRO: " + error.message + "\n\nDICA: Para o gerador funcionar, ele precisa 'ler' os arquivos da pasta. Use o 'Live Server' do VS Code ou rode em um servidor local.");
+                log.innerHTML += `<span style="color:red">❌ ERRO: ${error.message}</span>`;
+                btn.disabled = false;
+                btn.innerText = "Tentar Novamente";
+            }
         }
     </script>
 </body>
