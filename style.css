@@ -1,0 +1,100 @@
+:root {
+    --bg-color: #0d1117;
+    --card-bg: #161b22;
+    --border-color: #30363d;
+    --primary: #238636; /* Verde GitHub/Whatsapp */
+    --primary-hover: #2ea043;
+    --accent: #1f6feb; /* Azul Ação */
+    --text-main: #c9d1d9;
+    --text-bright: #ffffff;
+    --danger: #da3633;
+    --shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding-top: 70px; /* Espaço pro header fixo */
+}
+
+/* Header */
+.main-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+.logo { font-weight: 700; color: var(--text-bright); font-size: 1.2rem; }
+.logo span { color: var(--primary); }
+
+.steps-indicator { display: flex; gap: 15px; font-size: 0.8rem; }
+.step { opacity: 0.4; }
+.step.active { opacity: 1; color: var(--primary); font-weight: bold; }
+
+/* Layout Geral */
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.hidden { display: none !important; }
+
+/* Botões */
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-primary { background: var(--primary); color: white; width: 100%; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-secondary { background: #21262d; color: var(--text-main); border: 1px solid var(--border-color); }
+
+/* Galeria de Fotos (Aprovação) */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+.photo-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-item.selected { border-color: var(--primary); }
+.status-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+
+/* Showroom (Produção) */
+.showroom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.product-card { 
+    background: var(--card-bg); border: 1px solid var(--border-color); 
+    border-radius: 12px; overflow: hidden; transition: transform 0.2s; 
+}
+.product-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+.prod-img-area { height: 180px; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.prod-img-area img { width: 100%; height: 100%; object-fit: cover; }
+.prod-info { padding: 20px; }
+
+/* Inputs e Forms */
+input, select, textarea {
+    width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px;
+    background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px;
+}
+
+/* Modal */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); }
+.modal-content { margin: auto; display: block; max-width: 90%; max-height: 90vh; position: relative; top: 50%; transform: translateY(-50%); }
+.close-modal { position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .steps-indicator span { display: none; }
+    .steps-indicator span.active { display: block; }
+    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+}
