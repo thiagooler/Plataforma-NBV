@@ -2,138 +2,440 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>NBV Admin - Controle Total</title>
-    <link rel="stylesheet" href="style.css">
+    <title>NBV Command Center - Cloud Edition</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script src="js/database.js"></script>
+
     <style>
-        body { padding-top: 20px; max-width: 800px; margin: 0 auto; background: #f4f6f8; color: #333; }
-        .card { background: white; border: 1px solid #ddd; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        input, textarea { background: #fff; color: #333; border: 1px solid #ccc; padding: 10px; width: 100%; border-radius: 6px; }
-        label { margin-top: 15px; display: block; font-weight: bold; color: #0066cc; }
-        button { margin-top: 20px; width: 100%; padding: 15px; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:hover { background: #0052a3; }
-        .note { font-size: 0.85em; color: #666; margin-top: -10px; margin-bottom: 10px; display: block; }
+        :root { --primary: #0066cc; --primary-dark: #004c99; --bg: #f3f4f6; --sidebar: #ffffff; --text: #1f2937; --border: #e5e7eb; --danger: #ef4444; --success: #10b981; --github: #24292e; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.02); }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .brand span { color: var(--primary); }
+        .nav-btn { background: none; border: none; text-align: left; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: 500; color: #6b7280; display: flex; align-items: center; gap: 12px; margin-bottom: 5px; transition: 0.2s; font-size: 0.95rem; width: 100%; }
+        .nav-btn:hover { background: #f9fafb; color: var(--primary); }
+        .nav-btn.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
+        .nav-btn.git-config { color: var(--github); margin-top: 20px; border: 1px dashed #d1d5db; }
+        .nav-btn.git-config.active { background: #e5e7eb; color: black; border-style: solid; }
+        
+        .action-area { margin-top: auto; border-top: 1px solid var(--border); padding-top: 20px; }
+
+        /* Main */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; color: #111827; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; color: #374151; }
+        input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
+        .row { display: flex; gap: 20px; }
+        .col { flex: 1; }
+
+        /* Products */
+        .product-list { display: flex; flex-direction: column; gap: 15px; }
+        .product-item { background: white; border: 1px solid var(--border); padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: flex-end; }
+        .btn-remove { background: #fee2e2; color: var(--danger); border: none; padding: 10px; border-radius: 6px; cursor: pointer; height: 42px; width: 42px; display: flex; align-items: center; justify-content: center; }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; margin-bottom: 10px; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        
+        .btn-github { background: var(--github); color: white; }
+        .btn-github:hover { background: #000; }
+        
+        .btn-add { background: #ecfdf5; color: var(--success); border: 1px dashed var(--success); margin-top: 10px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        #status-log { margin-top: 15px; font-size: 0.8rem; color: #6b7280; font-family: monospace; max-height: 120px; overflow-y: auto; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 6px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1 style="text-align:center; color:#0066cc">🏭 NBV Factory</h1>
-        <p style="text-align:center;">Gera a estrutura base. Depois você pode editar o arquivo <b>config_cliente.js</b> para controle total.</p>
-        
-        <label>Nome do Cliente</label>
-        <input type="text" id="cliName" placeholder="Ex: Casamento Maria e Joao">
 
-        <label>Links das Fotos (Um por linha)</label>
-        <textarea id="cliFotos" rows="5" placeholder="https://..."></textarea>
+    <div class="sidebar">
+        <div class="brand"><i class="fas fa-camera-retro"></i> Studio<span>NBV</span></div>
         
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <label>Fotos no Pacote</label>
-                <input type="number" id="cliInc" value="50">
+        <nav>
+            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> Cliente Atual</button>
+            <button class="nav-btn" onclick="showTab('tab-album')"><i class="fas fa-book-open"></i> Config. Fotolivro</button>
+            <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-box-open"></i> Produtos Extras</button>
+            <button class="nav-btn" onclick="showTab('tab-logistica')"><i class="fas fa-truck"></i> Logística</button>
+            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> Financeiro</button>
+            
+            <button class="nav-btn git-config" onclick="showTab('tab-github')"><i class="fab fa-github"></i> Conexão GitHub</button>
+        </nav>
+
+        <div class="action-area">
+            <button class="btn btn-primary" onclick="gerarZip()">
+                <i class="fas fa-file-zipper"></i> BAIXAR ZIP (OFFLINE)
+            </button>
+            
+            <button class="btn btn-github" onclick="salvarDiretoNoGithub()">
+                <i class="fas fa-cloud-upload-alt"></i> SALVAR NO GITHUB
+            </button>
+            
+            <div id="status-log">Pronto.</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div id="tab-cliente" class="section active">
+            <h2>Dados do Cliente</h2>
+            <div class="form-group">
+                <label>Nome do Evento / Cliente</label>
+                <input type="text" id="cliName" placeholder="Ex: Formatura Colégio X">
             </div>
-            <div>
-                <label>Valor Extra (R$)</label>
-                <input type="number" id="cliExtra" value="15.00">
+            <div class="form-group">
+                <label>Links das Fotos (Alta Resolução)</label>
+                <textarea id="cliFotos" rows="10" placeholder="https://... (Um link por linha)"></textarea>
             </div>
         </div>
 
-        <label>Título do Álbum</label>
-        <input type="text" id="albumTitle" value="Fotolivro Premium">
+        <div id="tab-album" class="section">
+            <h2>Configuração do Fotolivro (Padrão)</h2>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Fotos Inclusas no Pacote</label>
+                        <input type="number" id="packInc">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>Valor por Foto Extra (R$)</label>
+                        <input type="number" id="packExtra">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Título do Produto Principal</label>
+                <input type="text" id="albumTitle">
+            </div>
+            <div class="form-group">
+                <label>Descrição do Álbum</label>
+                <input type="text" id="albumDesc">
+            </div>
+        </div>
 
-        <h3>Logística</h3>
-        <label>Taxa de Envio (R$)</label>
-        <input type="number" id="taxaEnvio" value="30.00">
-        
-        <label>Locais de Retirada</label>
-        <textarea id="locaisRetirada" rows="3">Studio NBV (Boa Ventura)
-Balcão Ibema (Centro)
-Turvo (Praça Central)</textarea>
+        <div id="tab-produtos" class="section">
+            <h2>Produtos Adicionais (Padrão)</h2>
+            <div id="products-container" class="product-list"></div>
+            <button class="btn btn-add" onclick="addProductRow()">
+                <i class="fas fa-plus"></i> Adicionar Novo Produto
+            </button>
+        </div>
 
-        <button onclick="gerarPacoteCompleto()">📦 GERAR PACOTE EDITÁVEL (.ZIP)</button>
-        <div id="log-area" style="margin-top:15px; font-family:monospace; font-size:0.9em;"></div>
+        <div id="tab-logistica" class="section">
+            <h2>Entrega e Frete (Padrão)</h2>
+            <div class="form-group">
+                <label>Taxa de Envio / Transportadora (R$)</label>
+                <input type="number" id="shipPrice">
+            </div>
+            <div class="form-group">
+                <label>Locais de Retirada Grátis (Um por linha)</label>
+                <textarea id="pickupLocs" rows="5"></textarea>
+            </div>
+        </div>
+
+        <div id="tab-financeiro" class="section">
+            <h2>Pagamento (Padrão)</h2>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Desconto no Pix (%)</label>
+                        <input type="number" id="pixDesc">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>Parcelas sem Juros</label>
+                        <input type="number" id="noInterest">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tabela de Juros (Separados por vírgula)</label>
+                <input type="text" id="ratesTable">
+            </div>
+            <div class="form-group">
+                <label>Número WhatsApp</label>
+                <input type="text" id="whatsNum">
+            </div>
+        </div>
+
+        <div id="tab-github" class="section">
+            <h2>Conexão com Repositório</h2>
+            <p style="color:#666">Preencha isso apenas uma vez. Dados ficam salvos no seu navegador.</p>
+            
+            <div class="form-group">
+                <label>Token de Acesso Pessoal (Token Classic - Scope 'repo')</label>
+                <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxx">
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Usuário GitHub</label>
+                        <input type="text" id="ghUser" placeholder="SeuUsuario">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>Nome do Repositório</label>
+                        <input type="text" id="ghRepo" placeholder="NomeDoRepo">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Branch (Geralmente 'main' ou 'master')</label>
+                <input type="text" id="ghBranch" value="main">
+            </div>
+            
+            <button class="btn btn-primary" style="background:#24292e" onclick="salvarCredenciaisGithub()">
+                Salvar Credenciais
+            </button>
+        </div>
+
     </div>
 
     <script>
-        // Arquivos do sistema para copiar
-        const arquivosDoSistema = [
-            'index.html', 'style.css',
-            'js/core.js', 'js/mod_aprovacao.js', 'js/mod_producao.js', 'js/mod_entrega.js', 'js/mod_pagamento.js'
-        ];
-
-        async function gerarPacoteCompleto() {
-            const log = document.getElementById('log-area');
-            const btn = document.querySelector('button');
+        // --- 1. Inicialização ---
+        window.onload = function() {
+            carregarCredenciaisGithub(); // Carrega token do localStorage
             
-            if(!document.getElementById('cliFotos').value) return alert("Faltam as fotos!");
+            // Tenta carregar do arquivo database.js (se existir localmente)
+            if (typeof window.NBV_DB !== 'undefined') {
+                carregarDadosDoBanco(window.NBV_DB);
+            } else {
+                log("⚠️ database.js não encontrado localmente. Configure e salve no GitHub.");
+            }
+        };
 
-            btn.disabled = true;
-            btn.innerText = "⏳ Gerando...";
-            log.innerHTML = "Iniciando...<br>";
+        function carregarDadosDoBanco(db) {
+            // Fotolivro
+            document.getElementById('packInc').value = db.pacote.fotosInclusas;
+            document.getElementById('packExtra').value = db.pacote.valorFotoExtra;
+            document.getElementById('albumTitle').value = db.pacote.tituloAlbum;
+            document.getElementById('albumDesc').value = db.pacote.descricaoAlbum;
+
+            // Logística
+            document.getElementById('shipPrice').value = db.logistica.taxaEnvio;
+            document.getElementById('pickupLocs').value = db.logistica.locaisRetirada.join('\n');
+
+            // Financeiro
+            document.getElementById('pixDesc').value = db.financeiro.descontoPix;
+            document.getElementById('noInterest').value = db.financeiro.parcelasSemJuros;
+            document.getElementById('ratesTable').value = db.financeiro.tabelaJuros.join(', ');
+            document.getElementById('whatsNum').value = db.financeiro.whatsapp;
+
+            // Produtos Extras
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+            if (db.produtosExtras && db.produtosExtras.length > 0) {
+                db.produtosExtras.forEach(p => addProductRow(p));
+            }
+            log("✅ Dados carregados na tela.");
+        }
+
+        // --- 2. GITHUB API INTEGRATION (O Cérebro Novo) ---
+        
+        async function salvarDiretoNoGithub() {
+            const token = document.getElementById('ghToken').value;
+            const user = document.getElementById('ghUser').value;
+            const repo = document.getElementById('ghRepo').value;
+            const branch = document.getElementById('ghBranch').value;
+
+            if(!token || !user || !repo) return alert("Configure a aba 'Conexão GitHub' primeiro!");
+
+            const confirmacao = confirm("Isso irá atualizar o arquivo 'js/database.js' no seu GitHub e mudar os preços/regras do site. Confirma?");
+            if(!confirmacao) return;
+
+            log("🔄 Conectando ao GitHub...");
+            
+            // 1. Prepara os dados atuais da tela
+            const novoDB = montarObjetoDB();
+            const conteudoJS = `// --- NBV SYSTEM DATABASE ---\n// Atualizado via Admin em: ${new Date().toLocaleString()}\n\nwindow.NBV_DB = ${JSON.stringify(novoDB, null, 4)};`;
+            
+            const path = "js/database.js";
+            const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}`;
 
             try {
-                const zip = new JSZip();
-
-                // Monta a configuração BASE
-                const configBase = {
-                    cliente: document.getElementById('cliName').value,
-                    fotos: document.getElementById('cliFotos').value.split('\n').filter(x => x.trim()),
-                    pacote: { 
-                        fotosInclusas: Number(document.getElementById('cliInc').value),
-                        valorFotoExtra: Number(document.getElementById('cliExtra').value),
-                        tituloAlbum: document.getElementById('albumTitle').value,
-                        descricaoAlbum: "Acabamento de luxo e diagramação exclusiva."
-                    },
-                    // Aqui inserimos produtos de exemplo para você editar no código depois
-                    produtosExtras: [
-                        {
-                            id: "pendrive",
-                            titulo: "Pen Drive com Fotos",
-                            descricao: "Todas as fotos em alta resolução.",
-                            precoFixo: 80.00,
-                            icone: "fas fa-hdd"
-                        }
-                        // Você pode adicionar mais itens editando o arquivo gerado
-                    ],
-                    logistica: {
-                        taxaEnvio: Number(document.getElementById('taxaEnvio').value),
-                        textoEnvio: "Envio por Transportadora",
-                        locaisRetirada: document.getElementById('locaisRetirada').value.split('\n').filter(x => x.trim())
-                    },
-                    financeiro: {
-                        descontoPix: 5,
-                        parcelasSemJuros: 4,
-                        tabelaJuros: [0, 4.59, 5.99, 7.49, 8.99, 10.49, 11.99, 13.49, 14.99, 16.49, 17.99, 21.00]
-                    },
-                    whatsapp: {
-                        numero: "5542998370150"
+                // 2. Precisa pegar o SHA do arquivo atual para poder sobrescrever (Regra do GitHub)
+                log("🔍 Buscando arquivo atual...");
+                const getResp = await fetch(apiUrl, {
+                    headers: { 
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
                     }
-                };
+                });
 
-                // Cria o config_cliente.js legível
-                const configJS = `window.NBV_CONFIG = ${JSON.stringify(configBase, null, 4)};`;
-                zip.file("config_cliente.js", configJS);
-                log.innerHTML += "✅ Config gerada.<br>";
-
-                // Copia os arquivos do sistema
-                for (const arquivo of arquivosDoSistema) {
-                    const response = await fetch(arquivo);
-                    if (!response.ok) throw new Error(`Arquivo não encontrado: ${arquivo}`);
-                    const texto = await response.text();
-                    zip.file(arquivo, texto);
+                let sha = null;
+                if(getResp.ok) {
+                    const data = await getResp.json();
+                    sha = data.sha;
                 }
 
-                const content = await zip.generateAsync({type:"blob"});
-                saveAs(content, `Pedido_${configBase.cliente.replace(/\s+/g, '_')}.zip`);
+                // 3. Envia o Update (PUT)
+                log("🚀 Enviando atualização...");
                 
-                log.innerHTML += "🚀 Pronto! Edite o arquivo config_cliente.js se precisar alterar algo.";
-                btn.innerText = "📦 GERAR PACOTE EDITÁVEL (.ZIP)";
-                btn.disabled = false;
+                // Converte string para Base64 (UTF-8 safe)
+                const contentBase64 = btoa(unescape(encodeURIComponent(conteudoJS)));
+
+                const putResp = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: "Admin Update: database.js",
+                        content: contentBase64,
+                        sha: sha, // Se for null, cria arquivo novo. Se tiver SHA, atualiza.
+                        branch: branch
+                    })
+                });
+
+                if(putResp.ok) {
+                    log("✅ SUCESSO! GitHub atualizado.");
+                    alert("Sucesso! O arquivo database.js foi atualizado no GitHub.\nSe o Netlify estiver conectado, o site atualizará em breve.");
+                } else {
+                    const err = await putResp.json();
+                    throw new Error(err.message);
+                }
 
             } catch (error) {
-                alert("Erro: " + error.message);
-                btn.disabled = false;
+                log("❌ Erro GitHub: " + error.message);
+                alert("Erro ao salvar no GitHub: " + error.message);
             }
+        }
+
+        // --- 3. Funções Auxiliares de Credenciais ---
+        function salvarCredenciaisGithub() {
+            localStorage.setItem('nbv_gh_token', document.getElementById('ghToken').value);
+            localStorage.setItem('nbv_gh_user', document.getElementById('ghUser').value);
+            localStorage.setItem('nbv_gh_repo', document.getElementById('ghRepo').value);
+            localStorage.setItem('nbv_gh_branch', document.getElementById('ghBranch').value);
+            alert("Credenciais salvas no seu navegador!");
+        }
+
+        function carregarCredenciaisGithub() {
+            if(localStorage.getItem('nbv_gh_token')) document.getElementById('ghToken').value = localStorage.getItem('nbv_gh_token');
+            if(localStorage.getItem('nbv_gh_user')) document.getElementById('ghUser').value = localStorage.getItem('nbv_gh_user');
+            if(localStorage.getItem('nbv_gh_repo')) document.getElementById('ghRepo').value = localStorage.getItem('nbv_gh_repo');
+            if(localStorage.getItem('nbv_gh_branch')) document.getElementById('ghBranch').value = localStorage.getItem('nbv_gh_branch') || 'main';
+        }
+
+        // --- 4. Helpers Gerais ---
+        function montarObjetoDB() {
+             return {
+                pacote: {
+                    fotosInclusas: Number(document.getElementById('packInc').value),
+                    valorFotoExtra: Number(document.getElementById('packExtra').value),
+                    tituloAlbum: document.getElementById('albumTitle').value,
+                    descricaoAlbum: document.getElementById('albumDesc').value
+                },
+                logistica: {
+                    taxaEnvio: Number(document.getElementById('shipPrice').value),
+                    locaisRetirada: document.getElementById('pickupLocs').value.split('\n').filter(x=>x.trim())
+                },
+                financeiro: {
+                    descontoPix: Number(document.getElementById('pixDesc').value),
+                    parcelasSemJuros: Number(document.getElementById('noInterest').value),
+                    tabelaJuros: document.getElementById('ratesTable').value.split(',').map(Number),
+                    whatsapp: document.getElementById('whatsNum').value
+                },
+                produtosExtras: getProductsData()
+            };
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            // Simples lógica de botões
+            const btns = document.querySelectorAll('.nav-btn');
+            // Mapeamento manual rápido
+            if(tabId==='tab-cliente') btns[0].classList.add('active');
+            if(tabId==='tab-album') btns[1].classList.add('active');
+            if(tabId==='tab-produtos') btns[2].classList.add('active');
+            if(tabId==='tab-logistica') btns[3].classList.add('active');
+            if(tabId==='tab-financeiro') btns[4].classList.add('active');
+            if(tabId==='tab-github') btns[5].classList.add('active');
+        }
+
+        function addProductRow(data = null) {
+            const container = document.getElementById('products-container');
+            const id = Date.now() + Math.random();
+            const title = data ? data.titulo : '';
+            const desc = data ? data.descricao : '';
+            const price = data ? data.precoFixo : '';
+            const icon = data ? data.icone : 'fas fa-box';
+
+            const html = `
+                <div class="product-item" id="prod-${id}">
+                    <div style="flex:2"><label>Nome</label><input type="text" class="prod-title" value="${title}"></div>
+                    <div style="flex:3"><label>Descrição</label><input type="text" class="prod-desc" value="${desc}"></div>
+                    <div style="flex:1"><label>Preço</label><input type="number" class="prod-price" value="${price}"></div>
+                    <div style="flex:1"><label>Ícone</label><input type="text" class="prod-icon" value="${icon}"></div>
+                    <button class="btn-remove" onclick="document.getElementById('prod-${id}').remove()"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function getProductsData() {
+            const products = [];
+            document.querySelectorAll('.product-item').forEach(el => {
+                products.push({
+                    titulo: el.querySelector('.prod-title').value,
+                    descricao: el.querySelector('.prod-desc').value,
+                    precoFixo: Number(el.querySelector('.prod-price').value),
+                    icone: el.querySelector('.prod-icon').value
+                });
+            });
+            return products;
+        }
+        
+        // --- ZIP Generator Mantido para Cliente Específico ---
+        async function gerarZip() {
+            // ... (Mesma lógica de ZIP anterior, mas usando os dados da tela) ...
+            const cliName = document.getElementById('cliName').value;
+            const cliFotos = document.getElementById('cliFotos').value;
+            if(!cliName || !cliFotos) return alert("Preencha o Nome do Cliente e as Fotos!");
+            
+            log("⏳ Gerando ZIP...");
+            try {
+                const zip = new JSZip();
+                const config = { ...montarObjetoDB(), cliente: cliName, fotos: cliFotos.split('\n').filter(x=>x.trim()) };
+                zip.file("config_cliente.js", `window.NBV_CONFIG = ${JSON.stringify(config, null, 4)};`);
+                
+                const files = ['index.html', 'style.css', 'js/core.js', 'js/mod_aprovacao.js', 'js/mod_producao.js', 'js/mod_entrega.js', 'js/mod_pagamento.js', 'js/database.js'];
+                for (const file of files) {
+                    const resp = await fetch(file);
+                    if(!resp.ok) throw new Error("Erro ao ler "+file);
+                    zip.file(file, await resp.text());
+                }
+                saveAs(await zip.generateAsync({type:"blob"}), `Site_${cliName.replace(/\s+/g, '_')}.zip`);
+                log("🚀 ZIP Gerado!");
+            } catch(e) { alert(e.message); log("❌ "+e.message); }
+        }
+
+        function log(msg) {
+            const d = document.getElementById('status-log');
+            d.innerHTML = msg + "<br>" + d.innerHTML;
         }
     </script>
 </body>
