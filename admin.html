@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>NBV Admin V8.3</title>
+    <title>NBV Admin V8.4</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -27,6 +27,10 @@
         .list-item { background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 5px; display:flex; align-items:center; gap:10px; }
         .table-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
         .btn-remove { background: #fee2e2; color: #dc2626; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
+        
+        /* Estilo para o campo de Modo */
+        .mode-selector { padding: 15px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 8px; margin-bottom: 20px; }
+        .mode-selector select { font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -55,15 +59,17 @@
             <div class="form-group"><label>Links Fotos</label><textarea id="cliFotos" rows="6"></textarea></div>
             
             <h4 style="color:var(--primary); margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px">Definição de Fluxo</h4>
-            <div class="list-item">
-                <input type="checkbox" id="fluxoEdicao" checked> 
-                <div>
-                    <strong>Perguntar sobre Edição? (Fluxo de Venda)</strong><br>
-                    <small style="color:#666">
-                        Marcado = Pergunta edição -> Apresenta Produtos -> Venda/Upgrade.<br>
-                        Desmarcado = Galeria Simples -> Aprovação -> Envia lista (Sem preços).
-                    </small>
-                </div>
+            
+            <div class="mode-selector">
+                <label>Qual o objetivo deste link?</label>
+                <select id="fluxoModo">
+                    <option value="venda">💰 Venda de Fotos (Fluxo Completo)</option>
+                    <option value="aprovacao">✅ Aprovação de Fotos (Fluxo Simples)</option>
+                </select>
+                <small style="display:block; margin-top:5px; color:#555">
+                    <b>Venda:</b> Pergunta Edição -> Apresenta Produtos -> Vende Extras -> Pagamento.<br>
+                    <b>Aprovação:</b> Vai direto para a galeria -> Cliente marca Sim/Não -> Envia lista.
+                </small>
             </div>
 
             <h4 style="color:var(--primary); margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px">Contrato & Pagamento (Apenas Fluxo Venda)</h4>
@@ -133,8 +139,10 @@
             document.getElementById('ratesTable').value = db.financeiro.tabelaJuros.join(', ');
             document.getElementById('freeCities').value = db.logistica.cidadesGratis.join(', ');
             
-            // Fluxo (Apenas 1 checkbox agora)
-            document.getElementById('fluxoEdicao').checked = db.fluxo.pedirEdicao;
+            // TRADUÇÃO DO MODO (BOOLEAN -> SELECT)
+            // Se pedirEdicao for true, é "venda". Se false, é "aprovacao".
+            const modo = db.fluxo.pedirEdicao ? 'venda' : 'aprovacao';
+            document.getElementById('fluxoModo').value = modo;
 
             if(db.apresentacao) {
                 document.getElementById('txtBook').value = db.apresentacao.book.text;
@@ -154,6 +162,11 @@
             const prods = []; document.querySelectorAll('.prod-row').forEach(r => prods.push({ nome: r.querySelector('.pd-name').value, preco: Number(r.querySelector('.pd-price').value), icone: r.querySelector('.pd-icon').value }));
             const regras = {}; document.querySelectorAll('.regra-input').forEach(i => regras[i.dataset.size] = Number(i.value));
             const creds = []; document.querySelectorAll('.credito-row').forEach(r => creds.push({ item: r.querySelector('.cred-name').value, qtd: Number(r.querySelector('.cred-qtd').value) }));
+
+            // TRADUÇÃO DO MODO (SELECT -> BOOLEAN)
+            // O index.html espera "pedirEdicao: true" para o fluxo completo.
+            const modoSelecionado = document.getElementById('fluxoModo').value;
+            const ehVenda = (modoSelecionado === 'venda');
 
             return {
                 cliente: {
@@ -185,7 +198,8 @@
                     enderecoSede: document.getElementById('sedeAddress').value
                 },
                 fluxo: { 
-                    pedirEdicao: document.getElementById('fluxoEdicao').checked, // Define a rota
+                    pedirEdicao: ehVenda, // Aqui está a chave da mudança
+                    pedirAprovacao: true, // Sempre true internamente para manter compatibilidade
                     minimoFotosLivro: Number(document.getElementById('minFotosLivro').value)
                 },
                 tabelaFotolivros: livros, regrasDiagramacao: regras, produtosAvulsos: prods
@@ -221,7 +235,7 @@
             saveAs(blob, `Galeria_${config.cliente.nome}.html`);
         }
 
-        // Helpers UI
+        // UI Helpers
         function toggleContrato() { document.getElementById('detalhes-contrato').style.display = document.getElementById('cliIncluirAlbum').value === 'sim' ? 'block' : 'none'; }
         function showTab(id) { document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active'); }
         function addBookRow(d={}) { document.getElementById('fotolivro-table').insertAdjacentHTML('beforeend', `<div class="table-row book-row"><select class="bk-size"><option value="15x20" ${d.size=='15x20'?'selected':''}>15x20</option><option value="20x30" ${d.size=='20x30'?'selected':''}>20x30</option><option value="30x40" ${d.size=='30x40'?'selected':''}>30x40</option></select><input type="number" class="bk-pages" value="${d.pages||''}" placeholder="Págs"><input type="number" class="bk-price" value="${d.price||''}" placeholder="Base"><input type="number" class="bk-box" value="${d.priceBox||''}" placeholder="Caixa"><button class="btn-remove" onclick="this.parentElement.remove()">X</button></div>`); }
