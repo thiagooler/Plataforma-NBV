@@ -1,68 +1,87 @@
-// --- SISTEMA NBV CORE ---
+// --- NBV SYSTEM CORE (V7.0) ---
+// Gerencia o estado global e a navegação entre módulos.
 
 // Estado Global da Aplicação
-const AppState = {
-    config: {},      // Carregado do config_cliente.js
-    fotos: [],       // Lista de fotos com status
-    carrinho: [],    // Itens de produção selecionados
-    totalFinanceiro: 0,
-    etapaAtual: 1
+window.AppState = {
+    config: {},          // Configuração mesclada (DB + Cliente)
+    fotos: [],           // Lista de fotos com status (aprovada/rejeitada)
+    carrinho: [],        // Itens finais para o pedido
+    dadosEntrega: {},    // Detalhes da entrega
+    totalFinanceiro: 0,  // Valor total a pagar
+    custoFrete: 0,       // Valor do frete
+    podePagarNaEntrega: true // Controle de regra de negócio
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Verifica se a configuração existe
-    if (typeof window.NBV_CONFIG === 'undefined') {
-        document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:50px">⚠️ Arquivo de configuração não encontrado.</h1>';
+function StartApp() {
+    console.log("🚀 Iniciando Studio NBV System...");
+
+    // 1. Verifica se as configurações existem
+    if (!window.NBV_DB || !window.NBV_CONFIG) {
+        document.body.innerHTML = "<h2 style='text-align:center; padding:50px'>Erro Fatal: Configuração ou Banco de Dados não encontrado.</h2>";
         return;
     }
 
-    // 2. Inicializa o App
-    AppState.config = window.NBV_CONFIG;
-    initApp();
-});
-
-function initApp() {
-    // Carrega fotos na memória
-    AppState.fotos = AppState.config.fotos.map((url, index) => ({
-        id: index,
-        url: url,
-        status: 'pendente', // pendente, aprovada, rejeitada
-        obs: ''
-    }));
-
-    // Atualiza nome do cliente no título (opcional)
-    document.title = `Seleção - ${AppState.config.cliente}`;
-
-    // Carrega Módulo 1: Aprovação
-    carregarModulo('aprovacao');
+    // 2. Mescla DB Global com Config do Cliente
+    // A config do cliente tem preferência em campos específicos
+    AppState.config = { ...window.NBV_DB, ...window.NBV_CONFIG };
     
-    // Remove loading
-    document.querySelector('.loading-screen').classList.add('hidden');
+    // Garante que objetos aninhados foram mesclados corretamente
+    AppState.config.financeiro = { ...window.NBV_DB.financeiro, ...window.NBV_CONFIG.financeiro };
+    AppState.config.fluxo = { ...window.NBV_DB.fluxo, ...window.NBV_CONFIG.fluxo };
+
+    // 3. Inicializa as Fotos
+    if (window.NBV_CONFIG.fotos) {
+        AppState.fotos = window.NBV_CONFIG.fotos.map(url => ({
+            url: url,
+            status: 'pendente' // pendente, aprovada, rejeitada
+        }));
+    }
+
+    // 4. Define rota inicial baseado no fluxo
+    if (AppState.config.fluxo.pedirAprovacao) {
+        carregarModulo('aprovacao');
+    } else {
+        // Se não tiver aprovação, marca todas como aprovadas e vai pra produção
+        AppState.fotos.forEach(f => f.status = 'aprovada');
+        carregarModulo('producao');
+    }
 }
 
-// Sistema de Navegação entre Módulos
+// Navegação entre Módulos
 function carregarModulo(nome) {
-    // Esconde tudo
-    document.getElementById('app-container').innerHTML = '';
+    // Remove classe ativa de todos os passos
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     
-    // Atualiza Header
-    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-    
-    if (nome === 'aprovacao') {
-        document.getElementById('step-1').classList.add('active');
-        RenderAprovacao(); // Função do mod_aprovacao.js
-    } 
-    else if (nome === 'producao') {
-        document.getElementById('step-2').classList.add('active');
-        RenderProducao(); // Função do mod_producao.js
+    // Atualiza stepper visual
+    const stepMap = {
+        'aprovacao': 'step-aprovacao',
+        'producao': 'step-producao',
+        'entrega': 'step-entrega'
+    };
+    if (stepMap[nome]) {
+        document.getElementById(stepMap[nome]).classList.add('active');
     }
-    else if (nome === 'entrega') {
-        document.getElementById('step-3').classList.add('active');
-        RenderEntrega(); // Função do mod_entrega.js
+
+    // Renderiza o módulo específico
+    switch(nome) {
+        case 'aprovacao':
+            if (typeof RenderAprovacao === 'function') RenderAprovacao();
+            break;
+        case 'producao':
+            if (typeof RenderProducao === 'function') RenderProducao();
+            break;
+        case 'entrega':
+            if (typeof RenderEntrega === 'function') RenderEntrega();
+            break;
+        default:
+            console.error("Módulo desconhecido:", nome);
     }
+
+    // Scroll para o topo suavemente
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Formatador de Moeda
-function formatMoney(val) {
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+// Formatador de Moeda Global
+function formatMoney(value) {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
