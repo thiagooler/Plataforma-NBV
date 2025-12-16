@@ -8,7 +8,7 @@
         :root {
             --primary-color: #007bff; /* Azul padrão */
             --primary-hover: #0056b3;
-            --success-color: #28a745;
+            --success-color: #28a745; /* Verde Sucesso */
             --text-color: #333;
             --bg-color: #f4f4f9;
             --card-bg: #ffffff;
@@ -69,6 +69,8 @@
             width: 100%;
             margin-top: 10px;
             transition: background 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-primary {
@@ -81,12 +83,12 @@
             background-color: #6c757d;
             color: white;
         }
-        
-        .btn-outline {
-            background-color: transparent;
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
         }
+        .btn-success:hover { background-color: #218838; }
 
         /* SEÇÕES (Escondidas por padrão) */
         .section { display: none; }
@@ -115,7 +117,7 @@
             object-fit: cover;
             display: block;
         }
-        /* Marca d'água simulada via CSS (para demo) */
+        /* Marca d'água */
         .watermark-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -128,6 +130,7 @@
             transform: rotate(-30deg);
             pointer-events: none;
             background: rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
         /* MODAL DE ESPIAR (Lightbox) */
@@ -144,6 +147,7 @@
             max-width: 90%;
             max-height: 90%;
             border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         #lightbox .close-btn {
             position: absolute;
@@ -151,6 +155,7 @@
             color: #fff;
             font-size: 40px;
             cursor: pointer;
+            font-weight: bold;
         }
 
         /* CONTROLES DE SELEÇÃO */
@@ -217,10 +222,12 @@
 
         /* RESUMO */
         .summary-box {
-            background: #fff;
-            padding: 1rem;
+            background: #f8f9fa;
+            padding: 1.5rem;
             border-radius: 8px;
             margin-top: 1rem;
+            text-align: left;
+            border: 1px solid #ddd;
         }
     </style>
 </head>
@@ -312,50 +319,64 @@
                 <div class="watermark-overlay">Studio NBV - Prova</div>
             </div>
 
-            <div id="controls-area">
-                <label><input type="checkbox" id="select-photo-check"> Selecionar esta foto</label>
+            <div id="controls-area" style="padding: 15px; background: #eee; border-radius: 8px;">
+                <label style="font-size: 1.2rem; cursor: pointer;">
+                    <input type="checkbox" id="select-photo-check" style="transform: scale(1.5); margin-right: 10px;"> 
+                    Selecionar esta foto
+                </label>
             </div>
 
             <div class="nav-buttons">
-                <button class="btn btn-secondary" id="btn-prev" onclick="prevPhoto()" style="width: 45%;">Anterior</button>
-                <button class="btn btn-primary" id="btn-next" onclick="nextPhoto()" style="width: 45%;">Próxima Foto</button>
-                <button class="btn btn-success" id="btn-finish" onclick="finishSelection()" style="width: 45%; display: none; background-color: var(--success-color);">Finalizar Pedido</button>
+                <button class="btn btn-secondary" id="btn-prev" onclick="prevPhoto()" style="width: 45%;">← Anterior</button>
+                <button class="btn btn-primary" id="btn-next" onclick="nextPhoto()" style="width: 45%;">Próxima Foto →</button>
+                <button class="btn btn-success" id="btn-finish" onclick="finishSelection()" style="width: 45%; display: none;">Finalizar Pedido ✓</button>
             </div>
         </div>
     </div>
 
     <div id="summary-section" class="section">
         <div class="card">
-            <h2 style="color: var(--success-color);">Pedido Realizado!</h2>
+            <h2 style="color: var(--success-color);">Pedido Pronto!</h2>
+            <p>Confira abaixo o resumo da sua seleção.</p>
+            
             <div id="summary-content" class="summary-box">
                 </div>
-            <p>Entraremos em contato para finalizar o pagamento e a entrega.</p>
-            <button class="btn btn-primary" onclick="alert('Enviando para WhatsApp...')">Enviar Pedido no WhatsApp</button>
-            <button class="btn btn-secondary" onclick="location.reload()">Voltar ao Início</button>
+            
+            <button class="btn btn-success" onclick="sendToWhatsApp()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="20" style="vertical-align: middle; margin-right: 5px;">
+                Enviar Pedido no WhatsApp
+            </button>
+            <br>
+            <button class="btn btn-secondary" onclick="location.reload()" style="margin-top: 15px;">Voltar ao Início</button>
         </div>
     </div>
 
 </div>
 
 <script>
-    // DADOS MOCKADOS (Simulando fotos)
+    // --- CONFIGURAÇÃO ---
+    // COLOQUE SEU NÚMERO ABAIXO (DDD + Numero, apenas digitos)
+    const studioPhone = "5542998370150"; 
+    
+    // DADOS DAS FOTOS (Exemplo - substitua pelos caminhos reais)
     const photos = [
-        { id: 1, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+01" },
-        { id: 2, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+02" },
-        { id: 3, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+03" },
-        { id: 4, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+04" },
-        { id: 5, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+05" }
+        { id: 1, name: "IMG_001.jpg", src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+01" },
+        { id: 2, name: "IMG_002.jpg", src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+02" },
+        { id: 3, name: "IMG_003.jpg", src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+03" },
+        { id: 4, name: "IMG_004.jpg", src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+04" },
+        { id: 5, name: "IMG_005.jpg", src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+05" }
     ];
 
-    let currentMode = ''; // 'fotolivro', 'revelacao', 'arquivo'
-    let selectedPhotos = new Set(); // IDs das fotos selecionadas
+    let currentMode = ''; 
+    let selectedPhotos = new Set(); // Armazena os IDs selecionados
     let currentIndex = 0;
 
-    // --- NAVEGAÇÃO ENTRE TELAS ---
+    // --- NAVEGAÇÃO ---
 
     function showSection(sectionId) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         document.getElementById(sectionId).classList.add('active');
+        window.scrollTo(0, 0);
     }
 
     function goBack() {
@@ -365,7 +386,7 @@
         currentIndex = 0;
     }
 
-    // --- FUNÇÕES DA GALERIA (ESPIAR) ---
+    // --- GALERIA / ESPIAR ---
 
     function showGallery() {
         const grid = document.getElementById('gallery-grid');
@@ -374,7 +395,7 @@
             const div = document.createElement('div');
             div.className = 'gallery-item';
             div.innerHTML = `
-                <img src="${photo.src}" alt="Foto ${photo.id}">
+                <img src="${photo.src}" alt="${photo.name}">
                 <div class="watermark-overlay">Studio NBV</div>
             `;
             div.onclick = () => openLightbox(photo.src);
@@ -383,7 +404,6 @@
         showSection('gallery-section');
     }
 
-    // Lightbox Logic
     function openLightbox(src) {
         const lightbox = document.getElementById('lightbox');
         const img = document.getElementById('lightbox-img');
@@ -395,19 +415,19 @@
         document.getElementById('lightbox').style.display = 'none';
     }
 
-    // --- LÓGICA DE PERSUASÃO (ARQUIVO DIGITAL) ---
+    // --- ARQUIVO DIGITAL (PERSUASÃO) ---
 
     function goToPersuasion() {
         showSection('persuasion-section');
     }
 
     function finishDigitalOrder() {
-        // Se o cliente insistir no digital, vai direto pro resumo (todos os arquivos)
+        // Pula seleção e vai para resumo de arquivos
         currentMode = 'arquivo_completo';
         showSummary();
     }
 
-    // --- LÓGICA DE SELEÇÃO (FOTOLIVRO / REVELAÇÃO) ---
+    // --- SELEÇÃO (FOTOLIVRO / REVELAÇÃO) ---
 
     function startSelection(mode) {
         currentMode = mode;
@@ -415,26 +435,22 @@
         selectedPhotos.clear();
         updatePhotoViewer();
         
-        // Texto do cabeçalho
         const titleMap = {
             'fotolivro': 'Selecionando para Fotolivro',
             'revelacao': 'Selecionando para Revelação'
         };
         document.getElementById('mode-title').innerText = titleMap[mode];
-        
         showSection('selection-section');
     }
 
     function updatePhotoViewer() {
         const photo = photos[currentIndex];
         document.getElementById('current-photo').src = photo.src;
-        document.getElementById('counter').innerText = `Foto ${currentIndex + 1} de ${photos.length}`;
+        document.getElementById('counter').innerText = `Foto ${currentIndex + 1} de ${photos.length} (${photo.name})`;
         
-        // Estado do checkbox
         const checkbox = document.getElementById('select-photo-check');
         checkbox.checked = selectedPhotos.has(photo.id);
         
-        // Lógica do Checkbox (Salvar estado)
         checkbox.onclick = function() {
             if (this.checked) {
                 selectedPhotos.add(photo.id);
@@ -443,7 +459,6 @@
             }
         };
 
-        // Lógica dos Botões de Navegação
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
         const btnFinish = document.getElementById('btn-finish');
@@ -457,13 +472,11 @@
             btnPrev.style.opacity = '1';
         }
 
-        // Botão Próximo vs Finalizar
+        // Botão Próximo / Finalizar
         if (currentIndex === photos.length - 1) {
-            // Última foto
             btnNext.style.display = 'none';
             btnFinish.style.display = 'inline-block';
         } else {
-            // Fotos do meio
             btnNext.style.display = 'inline-block';
             btnFinish.style.display = 'none';
         }
@@ -484,32 +497,77 @@
     }
 
     function finishSelection() {
+        if (selectedPhotos.size === 0) {
+            alert("Você não selecionou nenhuma foto! Por favor, selecione ao menos uma.");
+            return;
+        }
         showSummary();
     }
 
-    // --- RESUMO ---
+    // --- RESUMO E WHATSAPP ---
 
     function showSummary() {
         let html = '';
         
         if (currentMode === 'arquivo_completo') {
             html = `
-                <p><strong>Tipo:</strong> Somente Arquivos Digitais (Pacote Completo)</p>
-                <p>Você receberá um link para baixar todas as fotos.</p>
+                <p><strong>Pedido:</strong> PACOTE DE ARQUIVOS DIGITAIS</p>
+                <p>O cliente deseja comprar todos os arquivos digitais em alta resolução.</p>
+                <hr>
+                <p> Aguardando link para download.</p>
             `;
         } else {
+            let modeName = currentMode === 'fotolivro' ? 'FOTOLIVRO PREMIUM' : 'REVELAÇÃO AVULSA';
+            
+            // Pega os nomes das fotos baseados nos IDs selecionados
+            let selectedNames = [];
+            photos.forEach(p => {
+                if (selectedPhotos.has(p.id)) selectedNames.push(p.name);
+            });
+
             html = `
-                <p><strong>Tipo:</strong> ${currentMode.toUpperCase()}</p>
-                <p><strong>Fotos Selecionadas:</strong> ${selectedPhotos.size}</p>
-                <p>Lista: ${Array.from(selectedPhotos).join(', ')}</p>
+                <p><strong>Tipo de Pedido:</strong> ${modeName}</p>
+                <p><strong>Quantidade:</strong> ${selectedPhotos.size} fotos</p>
+                <hr>
+                <p><strong>Fotos Escolhidas:</strong></p>
+                <ul style="max-height: 150px; overflow-y: auto; background: #fff; padding: 10px; border: 1px solid #ddd;">
+                    ${selectedNames.map(n => `<li>${n}</li>`).join('')}
+                </ul>
             `;
+            
             if (currentMode === 'fotolivro') {
-                html += `<hr><p><strong>Valor:</strong> R$ 1.200,00 (ou 12x R$ 100,00)</p>`;
+                html += `<p style="margin-top:10px; color: var(--primary-color);"><strong>Valor:</strong> R$ 1.200,00 (ou 12x R$ 100,00)</p>`;
             }
         }
 
         document.getElementById('summary-content').innerHTML = html;
         showSection('summary-section');
+    }
+
+    function sendToWhatsApp() {
+        let message = "";
+        
+        if (currentMode === 'arquivo_completo') {
+            message = `Olá! Acabei de finalizar minha escolha.\n\n*PEDIDO: SOMENTE ARQUIVOS DIGITAIS*\nQuero adquirir o pacote completo das fotos em alta resolução.`;
+        } else {
+            let modeName = currentMode === 'fotolivro' ? 'FOTOLIVRO' : 'REVELAÇÃO';
+            let selectedNames = [];
+            photos.forEach(p => {
+                if (selectedPhotos.has(p.id)) selectedNames.push(p.name);
+            });
+
+            message = `Olá! Acabei de finalizar minha escolha.\n\n*PEDIDO: ${modeName}*\n*Quantidade:* ${selectedPhotos.size} fotos\n\n*Lista de Fotos:*\n${selectedNames.join(', ')}`;
+            
+            if (currentMode === 'fotolivro') {
+                message += `\n\n*Modelo:* Fotolivro R$ 1.200,00`;
+            }
+        }
+
+        // Codifica a mensagem para URL
+        let encodedMsg = encodeURIComponent(message);
+        let url = `https://wa.me/${studioPhone}?text=${encodedMsg}`;
+        
+        window.open(url, '_blank');
     }
 
 </script>
