@@ -3,76 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <title>NBV Command Center V4</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
     <script src="js/database.js"></script>
 
     <style>
-        :root { --primary: #0066cc; --bg: #f3f4f6; --sidebar: #fff; --text: #1f2937; --border: #e5e7eb; --danger: #dc2626; --success: #16a34a; --github: #24292e; }
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #004c99;
+            --bg: #f3f4f6;
+            --sidebar: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --github: #24292e;
+            --highlight: #e0f2fe;
+        }
+
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.02); }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .brand span { color: var(--primary); }
         
-        /* Layout */
-        .sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .nav-btn { width: 100%; text-align: left; padding: 12px 15px; border: none; background: none; cursor: pointer; color: #6b7280; font-weight: 500; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .nav-btn:hover { background: #f9fafb; color: var(--primary); }
+        .nav-btn.active { background: #eff6ff; color: var(--primary); font-weight: 700; }
+        .nav-btn i { width: 20px; text-align: center; }
+
+        /* Main Content */
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        
-        /* Typography & Components */
-        .brand { font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; color: var(--text); } .brand span { color: var(--primary); }
-        h2 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
-        h4 { margin: 15px 0 10px; color: var(--primary); }
-        
-        .section { display: none; } .section.active { display: block; animation: fadeIn 0.3s; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Navigation */
-        .nav-btn { width: 100%; text-align: left; padding: 12px; border: none; background: none; cursor: pointer; color: #666; font-weight: 500; border-radius: 6px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
-        .nav-btn:hover { background: #f0f9ff; color: var(--primary); }
-        .nav-btn.active { background: #e0f2fe; color: var(--primary); font-weight: 700; }
+        h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; color: #111827; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        h4 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; }
         
         /* Forms */
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; color: #374151; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
         .row { display: flex; gap: 15px; } .col { flex: 1; }
 
         /* Dynamic Lists */
-        .list-item { background: #fff; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
-        .btn-remove { background: #fee2e2; color: var(--danger); border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
+        .list-item { background: #fff; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; }
+        .btn-remove { background: #fee2e2; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        /* Table Editor */
+        .table-header { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 5px; padding: 0 5px; font-size: 0.8rem; font-weight: bold; color: #666; margin-bottom: 5px; }
+        .table-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 5px; }
 
         /* Buttons */
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #15803d; }
         .btn-github { background: var(--github); color: white; }
-        .btn-add { border: 1px dashed var(--success); color: var(--success); background: #f0fdf4; }
+        .btn-github:hover { background: #000; }
+        .btn-add { background: #ecfdf5; color: var(--success); border: 1px dashed var(--success); }
+        .btn-add:hover { background: #d1fae5; }
 
-        /* Table Editor Styles */
-        .table-editor-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 5px; background: #fff; padding: 5px; border-radius: 4px; border: 1px solid #eee; align-items: center; }
-        .table-editor-row input { padding: 5px; font-size: 0.9rem; }
+        /* Logs */
+        #log-area { margin-top: 10px; font-size: 0.8rem; color: #666; max-height: 80px; overflow-y: auto; background: #fff; padding: 5px; border: 1px solid #eee; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand"><i class="fas fa-camera"></i> Studio<span>NBV</span></div>
+        <div class="brand"><i class="fas fa-camera-retro"></i> Studio<span>NBV</span></div>
         <nav>
-            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> Cliente & Créditos</button>
+            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> Cliente & Contrato</button>
             <button class="nav-btn" onclick="showTab('tab-fotolivro')"><i class="fas fa-book"></i> Tabela Fotolivros</button>
-            <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-images"></i> Revelações e Quadros</button>
+            <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-images"></i> Produtos Avulsos</button>
             <button class="nav-btn" onclick="showTab('tab-fluxo')"><i class="fas fa-random"></i> Fluxo & Regras</button>
-            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-wallet"></i> Financeiro</button>
+            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> Financeiro & Log.</button>
             <button class="nav-btn" onclick="showTab('tab-github')"><i class="fab fa-github"></i> Conexão GitHub</button>
         </nav>
+        
         <div style="margin-top:auto; border-top:1px solid #eee; padding-top:15px">
-            <button class="btn btn-success" onclick="gerarZip()"><i class="fas fa-download"></i> BAIXAR ZIP</button>
-            <button class="btn btn-github" onclick="salvarGithub()"><i class="fas fa-cloud-upload-alt"></i> SALVAR NO GITHUB</button>
-            <div id="log" style="font-size:11px; color:#666; margin-top:5px; height:60px; overflow-y:auto"></div>
+            <button class="btn btn-success" onclick="gerarZip()">
+                <i class="fas fa-file-zipper"></i> GERAR SITE (.ZIP)
+            </button>
+            <button class="btn btn-github" onclick="salvarNoGithub()">
+                <i class="fas fa-cloud-upload-alt"></i> SALVAR DB
+            </button>
+            <div id="log-area">Pronto.</div>
         </div>
     </div>
 
     <div class="main-content">
-        
+
         <div id="tab-cliente" class="section active">
             <h2>Dados do Cliente</h2>
             <div class="form-group">
@@ -80,62 +110,81 @@
                 <input type="text" id="cliName" placeholder="Ex: Casamento Maria e João">
             </div>
             <div class="form-group">
-                <label>Links das Fotos (Alta)</label>
+                <label>Links das Fotos (Alta Resolução)</label>
                 <textarea id="cliFotos" rows="6" placeholder="https://..."></textarea>
             </div>
             
-            <h4>Particularidades (Créditos e Entradas)</h4>
+            <h4>Contrato e Pagamentos</h4>
             <div class="row">
                 <div class="col">
                     <div class="form-group">
-                        <label>Valor de Entrada Já Pago (R$)</label>
+                        <label>Entrada/Sinal Pago (R$)</label>
                         <input type="number" id="cliEntrada" value="0.00">
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label>Incluir Fotolivro no Pacote?</label>
-                        <select id="cliIncluirAlbum">
-                            <option value="nao">Não (Cliente Escolhe/Paga a parte)</option>
-                            <option value="sim">Sim (Já incluso no contrato)</option>
+                        <label>Possui Fotolivro no Contrato?</label>
+                        <select id="cliIncluirAlbum" onchange="toggleContratoAlbum()">
+                            <option value="nao">Não (Venda Avulsa)</option>
+                            <option value="sim">Sim (Já Contratado)</option>
                         </select>
                     </div>
                 </div>
             </div>
 
+            <div id="detalhes-contrato" style="display:none; background:var(--highlight); padding:15px; border-radius:8px; border:1px solid #bae6fd; margin-bottom:20px">
+                <h5 style="margin-top:0; color:var(--primary); margin-bottom:10px">Detalhes do Álbum Contratado</h5>
+                <p style="font-size:0.85rem; color:#555; margin-bottom:15px">Estes dados baseiam o cálculo de upgrade.</p>
+                
+                <div class="row">
+                    <div class="col">
+                        <label>Tamanho Contratado</label>
+                        <select id="ctrSize">
+                            <option value="15x20">15x20</option>
+                            <option value="20x30">20x30</option>
+                            <option value="30x40">30x40</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Qtd. Fotos Contratada</label>
+                        <input type="number" id="ctrQtdFotos" value="20">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:10px">
+                    <label>Valor de Crédito do Álbum (R$)</label>
+                    <input type="number" id="ctrValorCredito" placeholder="Ex: 800.00">
+                    <small>Preço atual de venda deste álbum para abater no upgrade.</small>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label>Itens que o cliente já possui (Créditos)</label>
+                <label>Créditos Extras (Itens que o cliente já tem)</label>
                 <div id="creditos-list"></div>
-                <button class="btn btn-add" onclick="addCreditoRow()">+ Adicionar Crédito (Ex: 4 fotos 10x15)</button>
+                <button class="btn btn-add" onclick="addCreditoRow()">+ Adicionar Crédito (Ex: 1 Quadro)</button>
             </div>
         </div>
 
         <div id="tab-fotolivro" class="section">
-            <h2>Tabela de Custo de Fotolivros</h2>
+            <h2>Tabela de Fotolivros (Matriz de Custo)</h2>
             <div class="row">
-                <div class="col">
-                    <label>Markup (Multiplicador de Lucro)</label>
-                    <input type="number" id="markup" value="2.5" step="0.1">
-                </div>
-                <div class="col">
-                    <label>Custo Fixo Diagramação</label>
-                    <input type="number" id="custoFixo" value="30.00">
-                </div>
+                <div class="col"><label>Markup (Lucro)</label><input type="number" id="markup" step="0.1"></div>
+                <div class="col"><label>Custo Fixo Diag.</label><input type="number" id="custoFixo"></div>
             </div>
-
-            <h4>Matriz de Preços (Custo Base)</h4>
-            <div style="font-size:0.8rem; color:#666; margin-bottom:5px; display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; padding:0 5px;">
-                <span>Tamanho</span><span>Páginas</span><span>Custo S/ Caixa</span><span>Custo C/ Caixa</span><span></span>
+            
+            <h4>Tabela de Preços Base</h4>
+            <div class="table-header">
+                <span>Tamanho</span><span>Páginas</span><span>Custo Base</span><span>Custo Caixa</span><span></span>
             </div>
             <div id="fotolivro-table"></div>
-            <button class="btn btn-add" onclick="addBookRow()">+ Adicionar Linha na Tabela</button>
+            <button class="btn btn-add" onclick="addBookRow()">+ Adicionar Linha</button>
 
-            <h4>Regras de Diagramação (Fotos por Página)</h4>
+            <h4>Regras de Diagramação</h4>
             <div id="regras-container"></div>
         </div>
 
         <div id="tab-produtos" class="section">
-            <h2>Revelações e Quadros</h2>
+            <h2>Produtos Avulsos / Revelações</h2>
             <div id="produtos-list"></div>
             <button class="btn btn-add" onclick="addProdRow()">+ Adicionar Produto</button>
         </div>
@@ -145,7 +194,7 @@
             <div class="form-group">
                 <label class="list-item">
                     <input type="checkbox" id="fluxoEdicao"> 
-                    Perguntar se cliente quer Edição (Prazo 30 dias) ou Pular (Produção Imediata)?
+                    Perguntar se cliente quer Edição (30 dias) ou Pular?
                 </label>
                 <label class="list-item">
                     <input type="checkbox" id="fluxoAprovacao"> 
@@ -154,8 +203,7 @@
             </div>
             <div class="form-group">
                 <label>Mínimo de fotos para liberar opção de Fotolivro</label>
-                <input type="number" id="minFotosLivro" value="20">
-                <small>Se o cliente selecionar menos que isso, a opção de álbum nem aparece.</small>
+                <input type="number" id="minFotosLivro">
             </div>
         </div>
 
@@ -165,34 +213,39 @@
                 <div class="col"><label>Desc. Pix (%)</label><input type="number" id="pixDesc"></div>
                 <div class="col"><label>Parc. S/ Juros</label><input type="number" id="noInterest"></div>
             </div>
-            <div class="form-group"><label>Tabela Juros (1x..12x)</label><input type="text" id="ratesTable"></div>
+            <div class="form-group"><label>Tabela Juros (1x, 2x...)</label><input type="text" id="ratesTable"></div>
             
             <h4>Logística</h4>
             <div class="form-group"><label>Taxa Envio (R$)</label><input type="number" id="shipPrice"></div>
-            <div class="form-group"><label>Locais Retirada</label><textarea id="pickupLocs" rows="3"></textarea></div>
+            <div class="form-group"><label>Locais Retirada</label><textarea id="pickupLocs" rows="4"></textarea></div>
         </div>
 
         <div id="tab-github" class="section">
             <h2>Conexão GitHub</h2>
-            <input type="password" id="ghToken" placeholder="Token (ghp_...)">
-            <input type="text" id="ghUser" placeholder="Usuário" style="margin-top:10px">
-            <input type="text" id="ghRepo" placeholder="Repositório" style="margin-top:10px">
-            <button class="btn btn-primary" onclick="salvarCredenciais()">Salvar no Navegador</button>
+            <div class="form-group"><label>Token (ghp_...)</label><input type="password" id="ghToken"></div>
+            <div class="form-group"><label>Usuário GitHub</label><input type="text" id="ghUser"></div>
+            <div class="form-group"><label>Repositório</label><input type="text" id="ghRepo"></div>
+            <button class="btn btn-primary" onclick="salvarCredenciaisLocal()">Salvar no Navegador</button>
         </div>
 
     </div>
 
     <script>
-        // --- INICIALIZAÇÃO ---
+        // --- 1. Inicialização ---
         window.onload = function() {
-            carregarCredenciais();
-            if(window.NBV_DB) carregarDB(window.NBV_DB);
-            else alert("database.js não encontrado!");
-        }
+            carregarCredenciaisLocal();
+            // Verifica se database.js carregou
+            if(window.NBV_DB) {
+                carregarDB(window.NBV_DB);
+                log("Dados carregados com sucesso.");
+            } else {
+                alert("AVISO: database.js não encontrado. O sistema usará valores vazios.");
+            }
+        };
 
-        // --- CARREGAMENTO DE DADOS (DB -> TELA) ---
+        // --- 2. Carregar Dados na Tela (DB -> DOM) ---
         function carregarDB(db) {
-            // Financeiro/Logística
+            // Financeiro e Logística
             document.getElementById('markup').value = db.financeiro.markup || 2.5;
             document.getElementById('custoFixo').value = db.financeiro.custoFixoDiagramacao || 30;
             document.getElementById('pixDesc').value = db.financeiro.descontoPix;
@@ -200,38 +253,36 @@
             document.getElementById('ratesTable').value = db.financeiro.tabelaJuros.join(', ');
             document.getElementById('shipPrice').value = db.logistica.taxaEnvio;
             document.getElementById('pickupLocs').value = db.logistica.locaisRetirada.join('\n');
-
+            
             // Fluxo
             document.getElementById('fluxoEdicao').checked = db.fluxo.pedirEdicao;
             document.getElementById('fluxoAprovacao').checked = db.fluxo.pedirAprovacao;
             document.getElementById('minFotosLivro').value = db.fluxo.minimoFotosLivro;
 
-            // Tabela Fotolivros
-            const tbContainer = document.getElementById('fotolivro-table');
-            tbContainer.innerHTML = '';
+            // Tabelas
+            const tbLivro = document.getElementById('fotolivro-table');
+            tbLivro.innerHTML = '';
             db.tabelaFotolivros.forEach(item => addBookRow(item));
 
-            // Regras Diagramação
             const regContainer = document.getElementById('regras-container');
             regContainer.innerHTML = '';
             for(let size in db.regrasDiagramacao) {
                 regContainer.innerHTML += `
                     <div class="row" style="margin-bottom:5px; align-items:center">
-                        <div style="width:100px; font-weight:bold">${size}</div>
+                        <div style="width:80px; font-weight:bold">${size}</div>
                         <input type="number" class="regra-input" data-size="${size}" value="${db.regrasDiagramacao[size]}" style="width:80px">
-                        <span>fotos por página</span>
+                        <span>fotos/pág</span>
                     </div>`;
             }
 
-            // Produtos Avulsos
-            const prodContainer = document.getElementById('produtos-list');
-            prodContainer.innerHTML = '';
+            const tbProd = document.getElementById('produtos-list');
+            tbProd.innerHTML = '';
             db.produtosAvulsos.forEach(p => addProdRow(p));
         }
 
-        // --- MONTAGEM DO OBJETO (TELA -> JS) ---
-        function montarObjetoConfig() {
-            // Monta Tabela Fotolivros
+        // --- 3. Montar Objeto (DOM -> JS) ---
+        function montarConfiguracao() {
+            // Tabela Fotolivros
             const tabelaLivros = [];
             document.querySelectorAll('.book-row').forEach(row => {
                 tabelaLivros.push({
@@ -242,13 +293,13 @@
                 });
             });
 
-            // Monta Regras
+            // Regras
             const regras = {};
             document.querySelectorAll('.regra-input').forEach(inp => {
                 regras[inp.dataset.size] = Number(inp.value);
             });
 
-            // Monta Produtos
+            // Produtos Avulsos
             const prods = [];
             document.querySelectorAll('.prod-row').forEach(row => {
                 prods.push({
@@ -263,6 +314,12 @@
                     nome: document.getElementById('cliName').value,
                     entrada: Number(document.getElementById('cliEntrada').value),
                     incluirAlbum: document.getElementById('cliIncluirAlbum').value === 'sim',
+                    // Contrato detalhado
+                    contrato: {
+                        tamanho: document.getElementById('ctrSize').value,
+                        qtdFotos: Number(document.getElementById('ctrQtdFotos').value),
+                        valorCredito: Number(document.getElementById('ctrValorCredito').value)
+                    },
                     creditos: getCreditosData()
                 },
                 fotos: document.getElementById('cliFotos').value.split('\n').filter(x=>x.trim()),
@@ -289,19 +346,34 @@
             };
         }
 
-        // --- HELPERS DE UI (ADICIONAR LINHAS) ---
+        // --- 4. Helpers de Interface ---
+        function toggleContratoAlbum() {
+            const val = document.getElementById('cliIncluirAlbum').value;
+            document.getElementById('detalhes-contrato').style.display = (val === 'sim') ? 'block' : 'none';
+        }
+
+        function showTab(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            // Encontra o botão clicado e ativa
+            const buttons = Array.from(document.querySelectorAll('.nav-btn'));
+            const targetIndex = ['tab-cliente','tab-fotolivro','tab-produtos','tab-fluxo','tab-financeiro','tab-github'].indexOf(id);
+            if(targetIndex >= 0) buttons[targetIndex].classList.add('active');
+        }
+
         function addBookRow(data={}) {
             const html = `
-                <div class="table-editor-row book-row">
+                <div class="table-row book-row">
                     <select class="bk-size">
                         <option value="15x20" ${data.size=='15x20'?'selected':''}>15x20</option>
                         <option value="20x30" ${data.size=='20x30'?'selected':''}>20x30</option>
                         <option value="30x40" ${data.size=='30x40'?'selected':''}>30x40</option>
                     </select>
                     <input type="number" class="bk-pages" placeholder="Págs" value="${data.pages||''}">
-                    <input type="number" class="bk-price" placeholder="R$ Base" value="${data.price||''}">
-                    <input type="number" class="bk-box" placeholder="R$ Caixa" value="${data.priceBox||''}">
-                    <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
+                    <input type="number" class="bk-price" placeholder="Base R$" value="${data.price||''}">
+                    <input type="number" class="bk-box" placeholder="Caixa R$" value="${data.priceBox||''}">
+                    <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
                 </div>`;
             document.getElementById('fotolivro-table').insertAdjacentHTML('beforeend', html);
         }
@@ -310,9 +382,9 @@
             const html = `
                 <div class="list-item prod-row">
                     <input type="text" class="pd-name" placeholder="Nome" value="${data.nome||''}" style="flex:2">
-                    <input type="number" class="pd-price" placeholder="R$" value="${data.preco||''}" style="flex:1">
-                    <input type="text" class="pd-icon" placeholder="Icone" value="${data.icone||'fas fa-image'}" style="flex:1">
-                    <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
+                    <input type="number" class="pd-price" placeholder="Preço" value="${data.preco||''}" style="flex:1">
+                    <input type="text" class="pd-icon" placeholder="fa-class" value="${data.icone||'fas fa-image'}" style="flex:1">
+                    <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
                 </div>`;
             document.getElementById('produtos-list').insertAdjacentHTML('beforeend', html);
         }
@@ -322,7 +394,7 @@
                 <div class="list-item credito-row">
                     <input type="text" class="cred-name" placeholder="Item (Ex: Foto 10x15)" style="flex:2">
                     <input type="number" class="cred-qtd" placeholder="Qtd" value="1" style="width:60px">
-                    <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
+                    <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
                 </div>`;
             document.getElementById('creditos-list').insertAdjacentHTML('beforeend', html);
         }
@@ -338,86 +410,108 @@
             return creds;
         }
 
-        function showTab(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
+        function log(msg) { 
+            const d = document.getElementById('log-area');
+            d.innerHTML = msg + "<br>" + d.innerHTML; 
         }
 
-        function log(msg) { document.getElementById('log').innerHTML += `<div>${msg}</div>`; }
+        // --- 5. GitHub Integration ---
+        function salvarCredenciaisLocal() {
+            localStorage.setItem('nbv_ghToken', document.getElementById('ghToken').value);
+            localStorage.setItem('nbv_ghUser', document.getElementById('ghUser').value);
+            localStorage.setItem('nbv_ghRepo', document.getElementById('ghRepo').value);
+            alert("Credenciais salvas no navegador!");
+        }
 
-        // --- SALVAR NO GITHUB ---
-        async function salvarGithub() {
+        function carregarCredenciaisLocal() {
+            if(localStorage.getItem('nbv_ghToken')) document.getElementById('ghToken').value = localStorage.getItem('nbv_ghToken');
+            if(localStorage.getItem('nbv_ghUser')) document.getElementById('ghUser').value = localStorage.getItem('nbv_ghUser');
+            if(localStorage.getItem('nbv_ghRepo')) document.getElementById('ghRepo').value = localStorage.getItem('nbv_ghRepo');
+        }
+
+        async function salvarNoGithub() {
             const token = document.getElementById('ghToken').value;
             const user = document.getElementById('ghUser').value;
             const repo = document.getElementById('ghRepo').value;
-            
-            if(!token) return alert("Configure a aba GitHub!");
-            if(!confirm("Salvar alterações no database.js?")) return;
 
-            const config = montarObjetoConfig();
-            // Remove dados específicos de cliente para salvar o DB mestre
-            const dbMaster = { ...config };
-            delete dbMaster.cliente;
+            if(!token || !user || !repo) return alert("Preencha a aba GitHub!");
+            if(!confirm("Tem certeza que deseja atualizar o database.js no GitHub? Isso mudará os preços globais.")) return;
+
+            log("⏳ Conectando GitHub...");
+            
+            // Monta o DB Mestre (sem dados específicos do cliente)
+            const configFull = montarConfiguracao();
+            const dbMaster = { ...configFull };
+            delete dbMaster.cliente; 
             delete dbMaster.fotos;
 
-            const content = `window.NBV_DB = ${JSON.stringify(dbMaster, null, 4)};`;
-            const b64 = btoa(unescape(encodeURIComponent(content)));
-            
-            try {
-                // Get SHA
-                const url = `https://api.github.com/repos/${user}/${repo}/contents/js/database.js`;
-                const get = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
-                const sha = (await get.json()).sha;
+            const contentStr = `window.NBV_DB = ${JSON.stringify(dbMaster, null, 4)};`;
+            const contentB64 = btoa(unescape(encodeURIComponent(contentStr)));
 
-                // Put
-                const put = await fetch(url, {
+            try {
+                // 1. Get SHA
+                const url = `https://api.github.com/repos/${user}/${repo}/contents/js/database.js`;
+                const getResp = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
+                const sha = getResp.ok ? (await getResp.json()).sha : null;
+
+                // 2. Put
+                const putResp = await fetch(url, {
                     method: 'PUT',
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: "Admin Update V4",
-                        content: b64,
+                        message: "Admin Update: database.js",
+                        content: contentB64,
                         sha: sha
                     })
                 });
-                if(put.ok) alert("Salvo no GitHub com Sucesso!");
-                else throw new Error("Erro no upload");
-            } catch(e) { alert("Erro: " + e.message); }
-        }
 
-        // --- GERAR ZIP ---
-        async function gerarZip() {
-            const config = montarObjetoConfig();
-            if(!config.cliente.nome) return alert("Preencha o nome do cliente!");
-
-            const zip = new JSZip();
-            zip.file("config_cliente.js", `window.NBV_CONFIG = ${JSON.stringify(config, null, 4)};`);
-            
-            const files = ['index.html', 'style.css', 'js/core.js', 'js/mod_aprovacao.js', 'js/mod_producao.js', 'js/mod_entrega.js', 'js/mod_pagamento.js', 'js/database.js'];
-            
-            for(let f of files) {
-                try {
-                    const r = await fetch(f);
-                    if(!r.ok) throw new Error(f);
-                    zip.file(f, await r.text());
-                } catch(e) { console.log("Erro arquivo: " + f); }
+                if(putResp.ok) {
+                    log("✅ Salvo no GitHub com sucesso!");
+                    alert("Sucesso! Banco de dados atualizado.");
+                } else {
+                    throw new Error("Erro no upload: " + putResp.status);
+                }
+            } catch(e) {
+                log("❌ Erro: " + e.message);
+                alert("Erro: " + e.message);
             }
-            
-            saveAs(await zip.generateAsync({type:"blob"}), `NBV_${config.cliente.nome}.zip`);
         }
 
-        // Credenciais Helpers
-        function salvarCredenciais() {
-            localStorage.setItem('ghToken', document.getElementById('ghToken').value);
-            localStorage.setItem('ghUser', document.getElementById('ghUser').value);
-            localStorage.setItem('ghRepo', document.getElementById('ghRepo').value);
-            alert("Salvo!");
-        }
-        function carregarCredenciais() {
-            if(localStorage.getItem('ghToken')) document.getElementById('ghToken').value = localStorage.getItem('ghToken');
-            if(localStorage.getItem('ghUser')) document.getElementById('ghUser').value = localStorage.getItem('ghUser');
-            if(localStorage.getItem('ghRepo')) document.getElementById('ghRepo').value = localStorage.getItem('ghRepo');
+        // --- 6. Gerador ZIP ---
+        async function gerarZip() {
+            const config = montarConfiguracao();
+            if(!config.cliente.nome) return alert("Preencha o Nome do Cliente!");
+            if(config.fotos.length === 0) return alert("Cole os links das fotos!");
+
+            log("⏳ Gerando ZIP...");
+            
+            try {
+                const zip = new JSZip();
+                
+                // Configuração do Cliente
+                zip.file("config_cliente.js", `window.NBV_CONFIG = ${JSON.stringify(config, null, 4)};`);
+                
+                // Arquivos do Sistema
+                const files = [
+                    'index.html', 'style.css',
+                    'js/core.js', 'js/mod_aprovacao.js', 'js/mod_producao.js', 
+                    'js/mod_entrega.js', 'js/mod_pagamento.js', 'js/database.js'
+                ];
+
+                for(let f of files) {
+                    const resp = await fetch(f);
+                    if(!resp.ok) throw new Error("Arquivo não encontrado: " + f);
+                    zip.file(f, await resp.text());
+                }
+
+                const content = await zip.generateAsync({type:"blob"});
+                saveAs(content, `Site_${config.cliente.nome.replace(/\s+/g, '_')}.zip`);
+                log("🚀 ZIP Gerado!");
+
+            } catch(e) {
+                log("❌ Erro ZIP: " + e.message);
+                alert("Erro ao gerar ZIP (verifique se está usando Live Server): " + e.message);
+            }
         }
     </script>
 </body>
