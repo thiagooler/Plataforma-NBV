@@ -1,0 +1,702 @@
+<script>window.NBV_CONFIG = {
+  "assets": {
+    "watermarkText": "NBV - PROIBIDO TIRAR PRINT",
+    "opacity": 0.2
+  },
+  "fluxo": {
+    "pedirEdicao": true,
+    "pedirAprovacao": true,
+    "minimoFotosLivro": 20
+  },
+  "logistica": {
+    "taxaEnvio": 30,
+    "cidadesGratis": [
+      "Boa Ventura de São Roque",
+      "Turvo",
+      "Pitanga",
+      "Santa Maria do Oeste"
+    ],
+    "enderecoSede": "Rod. PR 466 km 210, Bairro Coamo (Anexo Mercado JL)"
+  },
+  "financeiro": {
+    "descontoPix": 5,
+    "parcelasSemJuros": 4,
+    "tabelaJuros": [
+      0,
+      4.59,
+      5.99,
+      7.49,
+      8.99,
+      10.49,
+      11.99,
+      13.49,
+      14.99,
+      16.49,
+      17.99,
+      21
+    ],
+    "whatsapp": "5542998370150",
+    "markup": 2.5,
+    "custoFixoDiagramacao": 30
+  },
+  "produtosAvulsos": [
+    {
+      "nome": "Foto 10x15",
+      "preco": 10,
+      "icone": "fas fa-image"
+    },
+    {
+      "nome": "Foto 15x20",
+      "preco": 20,
+      "icone": "fas fa-image"
+    },
+    {
+      "nome": "Foto 20x30",
+      "preco": 30,
+      "icone": "fas fa-image"
+    },
+    {
+      "nome": "Foto 30x40",
+      "preco": 40,
+      "icone": "fas fa-image"
+    },
+    {
+      "nome": "Foto 40x60",
+      "preco": 60,
+      "icone": "fas fa-image"
+    },
+    {
+      "nome": "Porta retrato 10x15",
+      "preco": 20,
+      "icone": "fas fa-portrait"
+    },
+    {
+      "nome": "Porta retrato 15x20",
+      "preco": 35,
+      "icone": "fas fa-portrait"
+    },
+    {
+      "nome": "Porta retrato 20x30",
+      "preco": 45,
+      "icone": "fas fa-portrait"
+    },
+    {
+      "nome": "Porta retrato 30x40",
+      "preco": 120,
+      "icone": "fas fa-portrait"
+    },
+    {
+      "nome": "Porta retrato 40x60",
+      "preco": 290,
+      "icone": "fas fa-portrait"
+    },
+    {
+      "nome": "Arquivo Digital",
+      "preco": 8,
+      "icone": "fas fa-cloud-download-alt"
+    }
+  ],
+  "tabelaFotolivros": [
+    {
+      "size": "30x40",
+      "pages": 20,
+      "price": 592,
+      "priceBox": 754
+    },
+    {
+      "size": "30x40",
+      "pages": 30,
+      "price": 750,
+      "priceBox": 912
+    },
+    {
+      "size": "30x40",
+      "pages": 40,
+      "price": 879,
+      "priceBox": 1070
+    },
+    {
+      "size": "30x40",
+      "pages": 50,
+      "price": 1037,
+      "priceBox": 1228
+    },
+    {
+      "size": "30x40",
+      "pages": 60,
+      "price": 1195,
+      "priceBox": 1386
+    },
+    {
+      "size": "30x40",
+      "pages": 80,
+      "price": 1511,
+      "priceBox": 1702
+    },
+    {
+      "size": "30x40",
+      "pages": 100,
+      "price": 1827,
+      "priceBox": 2018
+    },
+    {
+      "size": "20x30",
+      "pages": 20,
+      "price": 317,
+      "priceBox": 443
+    },
+    {
+      "size": "20x30",
+      "pages": 30,
+      "price": 406,
+      "priceBox": 532
+    },
+    {
+      "size": "20x30",
+      "pages": 50,
+      "price": 584,
+      "priceBox": 710
+    },
+    {
+      "size": "20x30",
+      "pages": 60,
+      "price": 673,
+      "priceBox": 799
+    },
+    {
+      "size": "20x30",
+      "pages": 80,
+      "price": 851,
+      "priceBox": 977
+    },
+    {
+      "size": "20x30",
+      "pages": 100,
+      "price": 1029,
+      "priceBox": 1155
+    },
+    {
+      "size": "15x20",
+      "pages": 20,
+      "price": 214,
+      "priceBox": 356
+    },
+    {
+      "size": "15x20",
+      "pages": 30,
+      "price": 269,
+      "priceBox": 382
+    },
+    {
+      "size": "15x20",
+      "pages": 40,
+      "price": 324,
+      "priceBox": 437
+    },
+    {
+      "size": "15x20",
+      "pages": 50,
+      "price": 379,
+      "priceBox": 492
+    },
+    {
+      "size": "15x20",
+      "pages": 60,
+      "price": 434,
+      "priceBox": 547
+    },
+    {
+      "size": "15x20",
+      "pages": 70,
+      "price": 489,
+      "priceBox": 602
+    },
+    {
+      "size": "15x20",
+      "pages": 80,
+      "price": 544,
+      "priceBox": 657
+    },
+    {
+      "size": "15x20",
+      "pages": 100,
+      "price": 654,
+      "priceBox": 767
+    }
+  ],
+  "regrasDiagramacao": {
+    "15x20": 3,
+    "20x30": 4,
+    "30x40": 5
+  },
+  "cliente": {
+    "nome": "teste1",
+    "entrada": 40,
+    "incluirAlbum": false,
+    "contrato": {
+      "tamanho": "15x20",
+      "qtdFotos": 20,
+      "valorTotal": 0
+    },
+    "creditos": [
+      {
+        "item": "Porta retrato 20x30",
+        "qtd": 1
+      }
+    ]
+  },
+  "fotos": [
+    "https://i.postimg.cc/3wKv1b2R/foto-0815.jpg",
+    "https://i.postimg.cc/jjs7cky2/foto-0817.jpg",
+    "https://i.postimg.cc/5txCgk86/foto-0819.jpg",
+    "https://i.postimg.cc/pd2FC1Km/foto-0826.jpg",
+    "https://i.postimg.cc/667YCyWx/foto-0829.jpg",
+    "https://i.postimg.cc/NGypR5sY/foto-0830.jpg",
+    "https://i.postimg.cc/mZ0VjBks/foto-0831.jpg",
+    "https://i.postimg.cc/ryvgjMmv/foto-0838.jpg",
+    "https://i.postimg.cc/bYKLgprd/foto-0840.jpg",
+    "https://i.postimg.cc/9FZbNKwy/foto-0843.jpg",
+    "https://i.postimg.cc/65nc1g4d/foto-0844.jpg",
+    "https://i.postimg.cc/Dwh6V61x/foto-1051.jpg",
+    "https://i.postimg.cc/fRsC4CxQ/foto-1053.jpg",
+    "https://i.postimg.cc/kgyc7Scx/foto-1125.jpg",
+    "https://i.postimg.cc/nh1knmkB/foto-1308.jpg",
+    "https://i.postimg.cc/bvNRrvCg/foto-1435.jpg",
+    "https://i.postimg.cc/jjdh2j3V/foto-1478.jpg",
+    "https://i.postimg.cc/Jh65kWSn/foto-1862.jpg",
+    "https://i.postimg.cc/FKWVLQw9/foto-1864.jpg",
+    "https://i.postimg.cc/tTstdMHJ/foto-1869.jpg",
+    "https://i.postimg.cc/0QzdGBqd/foto-1874.jpg",
+    "https://i.postimg.cc/k4LNTvnw/foto-1875.jpg",
+    "https://i.postimg.cc/2SdW4fLD/foto-1876.jpg"
+  ]
+};</script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Studio NBV - Galeria</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* --- STUDIO NBV DESIGN SYSTEM V9 (CONSOLIDATED) --- */
+:root {
+    --primary: #0066cc; --primary-dark: #004c99; --secondary: #64748b;
+    --bg: #f8f9fa; --card-bg: #ffffff; --text: #1f2937; --text-light: #6b7280;
+    --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+}
+body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; line-height: 1.5; }
+
+/* LAYOUT */
+.main-header { background: white; padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 1.5rem; font-weight: 800; color: #333; }
+.logo span { color: var(--primary); }
+#app-container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+
+/* COMPONENTES */
+.card { background: var(--card-bg); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 20px; border: 1px solid var(--border); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; font-size: 1rem; width:100%; box-sizing:border-box; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-whatsapp { background: #25D366; color: white; }
+.btn-secondary { background: #e2e8f0; color: #333; }
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* ELEMENTOS ESPECIFICOS */
+.steps { display: flex; gap: 20px; }
+.step { font-size: 0.9rem; color: #ccc; display: flex; align-items: center; gap: 5px; }
+.step.active { color: var(--primary); font-weight: 600; }
+.option-box { border: 2px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 10px; transition: all 0.2s; background: white; display:block; cursor:pointer }
+.option-box:hover { border-color: #cbd5e1; }
+.selected-plan { border-color: var(--primary) !important; background-color: #eff6ff !important; }
+.showroom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+.product-card { background: white; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; text-align: center; }
+.prod-img-area { background: #f1f5f9; display: flex; align-items: center; justify-content: center; height:120px }
+input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px; }
+
+/* PHOTO GRID */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding-bottom: 80px; }
+.photo-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: #eee; }
+.photo-item.selected { border: 4px solid var(--primary); }
+.photo-item.selected img { filter: brightness(0.9); }
+.watermark-overlay { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; background-repeat: repeat; background-position: center; }
+.selection-indicator { position: absolute; top: 10px; right: 10px; font-size: 24px; color: rgba(255,255,255,0.7); z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+.photo-item.selected .selection-indicator { color: var(--success); opacity: 1; transform: scale(1.1); }
+.floating-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 200; box-sizing:border-box }
+.sticky-header { position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+.film-strip-container { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid #eee; scrollbar-width: thin; }
+.thumb-protected { position: relative; flex: 0 0 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
+.thumb-protected img { width: 100%; height: 100%; object-fit: cover; }
+.wm-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background-repeat: repeat; background-size: 100px 50px; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<header class="main-header">
+    <div class="logo">Studio<span>NBV</span></div>
+    <div class="steps">
+        <div id="step-aprovacao" class="step active"><i class="fas fa-check-circle"></i> <span>Seleção</span></div>
+        <div id="step-producao" class="step"><i class="fas fa-print"></i> <span>Produtos</span></div>
+        <div id="step-entrega" class="step"><i class="fas fa-truck"></i> <span>Entrega</span></div>
+    </div>
+</header>
+
+<div id="app-container">
+    <div style="text-align:center; padding:50px; color:#666"><i class="fas fa-circle-notch fa-spin"></i> Carregando suas fotos...</div>
+</div>
+
+<script>
+// --- CORE LOGIC CONSOLIDATED ---
+
+window.AppState = {
+    config: {}, fotos: [], carrinho: [], dadosEntrega: {}, totalFinanceiro: 0, custoFrete: 0, podePagarNaEntrega: true
+};
+
+function StartApp() {
+    if (!window.NBV_CONFIG) return document.getElementById('app-container').innerHTML = "<h2>Erro: Configuração não encontrada.</h2>";
+    AppState.config = window.NBV_CONFIG;
+    
+    if (AppState.config.fotos) {
+        AppState.fotos = AppState.config.fotos.map(url => ({ url: url, status: 'pendente' }));
+    }
+
+    if (AppState.config.fluxo.pedirAprovacao) carregarModulo('aprovacao');
+    else {
+        AppState.fotos.forEach(f => f.status = 'aprovada');
+        carregarModulo('producao');
+    }
+}
+
+function carregarModulo(nome) {
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    const map = { 'aprovacao': 'step-aprovacao', 'producao': 'step-producao', 'entrega': 'step-entrega' };
+    if (map[nome]) document.getElementById(map[nome]).classList.add('active');
+    
+    if(nome === 'aprovacao') RenderAprovacao();
+    if(nome === 'producao') RenderProducao();
+    if(nome === 'entrega') RenderEntrega();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function formatMoney(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+// --- MÓDULO APROVAÇÃO ---
+function RenderAprovacao() {
+    const container = document.getElementById('app-container');
+    const config = AppState.config.assets || {};
+    const svg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg width='300' height='150' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' transform='rotate(-20 150 75)' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='20' fill='%23000' fill-opacity='${config.opacity||0.2}'>${config.watermarkText||"NBV"}</text></svg>`)}`;
+    
+    let html = `
+        <div class="card sticky-header">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <div><h2>📸 Seleção</h2><p style="margin:0">Toque para selecionar.</p></div>
+                <div style="text-align:right"><span style="font-size:0.9rem">Selecionadas:</span><br><strong style="font-size:1.5rem; color:var(--primary)" id="contador-topo">0</strong></div>
+            </div>
+        </div>
+        <div class="gallery-grid">`;
+
+    AppState.fotos.forEach((foto, index) => {
+        const isSel = foto.status === 'aprovada';
+        html += `<div class="photo-item ${isSel ? 'selected' : ''}" onclick="toggleFoto(${index})">
+            <div style="width:100%;height:100%"><img src="${foto.url}" loading="lazy"><div class="watermark-overlay" style="background-image:url('${svg}')"></div><div class="selection-indicator"><i class="fas fa-check-circle"></i></div></div>
+        </div>`;
+    });
+
+    html += `</div><div class="floating-action-bar"><div style="display:flex; justify-content:space-between; align-items:center; max-width:1000px; margin:0 auto">
+        <div><span id="contador-flutuante">0</span> fotos</div>
+        <button class="btn btn-primary" style="width:auto" onclick="finalizarSelecao()">Avançar <i class="fas fa-arrow-right"></i></button>
+    </div></div>`;
+    container.innerHTML = html;
+    atualizarContadores();
+}
+
+function toggleFoto(idx) {
+    const s = AppState.fotos[idx].status;
+    AppState.fotos[idx].status = (s === 'aprovada') ? 'rejeitada' : 'aprovada';
+    const el = document.querySelectorAll('.photo-item')[idx];
+    if(AppState.fotos[idx].status === 'aprovada') el.classList.add('selected'); else el.classList.remove('selected');
+    atualizarContadores();
+}
+
+function atualizarContadores() {
+    const c = AppState.fotos.filter(f => f.status === 'aprovada').length;
+    document.getElementById('contador-topo').innerText = c;
+    document.getElementById('contador-flutuante').innerText = c;
+}
+
+function finalizarSelecao() {
+    const c = AppState.fotos.filter(f => f.status === 'aprovada').length;
+    if (c === 0) return alert("Selecione pelo menos uma foto!");
+    
+    // Se o fluxo for de VENDA (pedirEdicao: true), vai para produção.
+    // Se for APENAS APROVAÇÃO (pedirEdicao: false), finaliza direto no WhatsApp.
+    if (AppState.config.fluxo.pedirEdicao) {
+        if(confirm("Deseja Edição Artística? (Pode haver custo extra/prazo maior)")) AppState.dadosEntrega.querEdicao = true;
+        else AppState.dadosEntrega.querEdicao = false;
+        carregarModulo('producao');
+    } else {
+        // Fluxo de Aprovação Simples - Envia direto
+        enviarAprovacaoSimples();
+    }
+}
+
+function enviarAprovacaoSimples() {
+    const sel = AppState.fotos.filter(f => f.status === 'aprovada');
+    // Aqui assumimos que a URL da foto tem o nome do arquivo.
+    let msg = `*SELEÇÃO DE FOTOS - ${AppState.config.cliente.nome}*\n\n`;
+    msg += `Foram selecionadas ${sel.length} fotos.\n\n`;
+    msg += `Links das selecionadas:\n`; // Ou apenas contagem se for muito longo
+    // Em um cenário real, mandaríamos apenas os nomes dos arquivos, mas como são URLs:
+    msg += `(Lista de arquivos pronta para envio)`;
+    
+    const zapLink = `https://wa.me/${AppState.config.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`;
+    window.open(zapLink, '_blank');
+}
+
+// --- MÓDULO PRODUÇÃO ---
+function RenderProducao() {
+    const container = document.getElementById('app-container');
+    const aprovadas = AppState.fotos.filter(f => f.status === 'aprovada');
+    const db = AppState.config;
+    const svg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg width='150' height='75' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' transform='rotate(-15 75 37)' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='12' fill='%23000' fill-opacity='0.2'>NBV</text></svg>`)}`;
+
+    let strip = `<div class="film-strip-container">`;
+    aprovadas.forEach(f => { strip += `<div class="thumb-protected"><img src="${f.url}"><div class="wm-overlay" style="background-image:url('${svg}')"></div></div>`; });
+    strip += `</div>`;
+
+    let html = `<div class="card fade-in"><h2>💎 Personalize</h2><p>${aprovadas.length} fotos selecionadas.</p>${strip}`;
+
+    // Fotolivros
+    if (aprovadas.length >= (db.fluxo.minimoFotosLivro || 20)) {
+        let optionsHtml = '';
+        const tamanhos = [...new Set(db.tabelaFotolivros.map(t=>t.size))];
+        const temContrato = db.cliente.incluirAlbum;
+        
+        // Determina valores base do contrato se houver
+        let valorContrato = 0, tamContrato = '', fotosContrato = 0;
+        if(temContrato) {
+            tamContrato = db.cliente.contrato.tamanho;
+            fotosContrato = db.cliente.contrato.qtdFotos;
+            // Acha preço base
+            const rule = db.regrasDiagramacao[tamContrato] || 4;
+            const pgs = Math.ceil(fotosContrato / rule);
+            const match = db.tabelaFotolivros.find(t => t.size === tamContrato && t.pages >= pgs);
+            if(match) valorContrato = (match.priceBox + db.financeiro.custoFixoDiagramacao) * db.financeiro.markup;
+        }
+
+        tamanhos.forEach(tam => {
+            const rule = db.regrasDiagramacao[tam] || 4;
+            const pgsNecessarias = Math.ceil(Math.max(aprovadas.length, fotosContrato) / rule);
+            const match = db.tabelaFotolivros.filter(t=>t.size===tam).sort((a,b)=>a.pages-b.pages).find(t=>t.pages>=pgsNecessarias);
+            
+            if(match) {
+                const custo = match.priceBox + db.financeiro.custoFixoDiagramacao;
+                const precoVenda = custo * db.financeiro.markup;
+                let upgrade = 0;
+                let label = `Fotolivro ${tam} (${match.pages} págs)`;
+                let destaque = '';
+
+                if(temContrato) {
+                    upgrade = Math.max(0, precoVenda - valorContrato);
+                    if(tam === tamContrato) destaque = 'SEU PLANO';
+                    else if(upgrade > 0) destaque = 'UPGRADE';
+                } else {
+                    upgrade = precoVenda; // Venda cheia
+                }
+
+                optionsHtml += `<label class="option-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <div><input type="radio" name="book_opt" value="${tam}" data-upgrade="${upgrade}" data-desc="${label}" onchange="atualizaTotal()"> 
+                        <b>${label}</b> ${destaque?`<span style="background:${destaque=='UPGRADE'?'orange':'#0066cc'};color:white;font-size:0.7rem;padding:2px 5px;border-radius:4px">${destaque}</span>`:''}</div>
+                        <div style="font-weight:bold; color:${upgrade>0?'var(--primary)':'green'}">${upgrade>0 ? '+ '+formatMoney(upgrade) : 'INCLUSO'}</div>
+                    </div>
+                </label>`;
+            }
+        });
+        html += `<h3>📚 Opções de Álbum</h3>${optionsHtml}`;
+    }
+
+    // Produtos Avulsos
+    html += `<h3 style="margin-top:20px">🖼️ Extras</h3><div class="showroom-grid">`;
+    db.produtosAvulsos.forEach((p, i) => {
+        // Verifica se tem crédito
+        const cred = db.cliente.creditos ? db.cliente.creditos.find(c=>c.item===p.nome) : null;
+        const qtdCred = cred ? cred.qtd : 0;
+        
+        html += `<div class="product-card">
+            <div class="prod-img-area"><i class="${p.icone}" style="font-size:30px;color:#ccc"></i></div>
+            <div style="padding:10px">
+                <h4 style="margin:5px 0;font-size:0.9rem">${p.nome}</h4>
+                <div style="font-weight:bold;color:var(--primary)">${formatMoney(p.preco)}</div>
+                ${qtdCred>0 ? `<small style="color:green">${qtdCred} un. inclusas</small>` : ''}
+                <div style="display:flex;justify-content:center;gap:10px;margin-top:10px">
+                    <button class="btn-secondary" onclick="addQtd('qtd_${i}', -1)" style="width:30px">-</button>
+                    <input id="qtd_${i}" readonly value="0" data-price="${p.preco}" data-name="${p.nome}" data-cred="${qtdCred}" style="width:40px;text-align:center;margin:0">
+                    <button class="btn-secondary" onclick="addQtd('qtd_${i}', 1)" style="width:30px">+</button>
+                </div>
+            </div>
+        </div>`;
+    });
+    html += `</div>`;
+
+    // Total Bar
+    html += `<div style="margin-top:20px; text-align:right; border-top:2px solid #eee; padding-top:15px">
+        <h3 id="display-total">Total Extras: R$ 0,00</h3>
+        <button class="btn btn-primary" onclick="finalizarProducao()">Ir para Entrega ➔</button>
+    </div></div>`;
+
+    container.innerHTML = html;
+}
+
+function addQtd(id, d) {
+    const el = document.getElementById(id);
+    let v = parseInt(el.value) + d;
+    if(v<0) v=0;
+    el.value = v;
+    atualizaTotal();
+}
+
+function atualizaTotal() {
+    let total = 0;
+    // Book
+    const book = document.querySelector('input[name="book_opt"]:checked');
+    if(book) total += parseFloat(book.dataset.upgrade);
+    
+    // Extras
+    document.querySelectorAll('input[id^="qtd_"]').forEach(el => {
+        const qtd = parseInt(el.value);
+        const cred = parseInt(el.dataset.cred);
+        const price = parseFloat(el.dataset.price);
+        const pagavel = Math.max(0, qtd - cred);
+        total += pagavel * price;
+    });
+
+    // Subtrai entrada se for venda avulsa e nao tiver contrato de album (lógica simplificada)
+    // Se tiver contrato, a entrada ja foi abatida no calculo do album ou é abatida no final. 
+    // Vamos abater do saldo final visualizado.
+    
+    // Simplificação visual
+    document.getElementById('display-total').innerHTML = `A Pagar: <span style="color:var(--primary)">${formatMoney(total)}</span>`;
+    return total;
+}
+
+function finalizarProducao() {
+    AppState.carrinho = [];
+    const book = document.querySelector('input[name="book_opt"]:checked');
+    if(book) AppState.carrinho.push({ item: book.dataset.desc, valor: parseFloat(book.dataset.upgrade) });
+    
+    document.querySelectorAll('input[id^="qtd_"]').forEach(el => {
+        const qtd = parseInt(el.value);
+        if(qtd > 0) {
+            const cred = parseInt(el.dataset.cred);
+            const price = parseFloat(el.dataset.price);
+            const pagavel = Math.max(0, qtd - cred);
+            let desc = `${qtd}x ${el.dataset.name}`;
+            if(cred > 0) desc += ` (${cred} inclusas)`;
+            AppState.carrinho.push({ item: desc, valor: pagavel * price });
+        }
+    });
+    
+    AppState.totalFinanceiro = atualizaTotal(); 
+    // Abate entrada final
+    const entrada = AppState.config.cliente.entrada || 0;
+    // Nota: A lógica de entrada depende se é contrato ou avulso. 
+    // Aqui assumimos que se o total > 0 e tem entrada, abateremos no resumo final.
+    
+    carregarModulo('entrega');
+}
+
+// --- MÓDULO ENTREGA & PAGAMENTO ---
+function RenderEntrega() {
+    const container = document.getElementById('app-container');
+    const db = AppState.config.logistica;
+    let html = `<div class="card fade-in"><h2>🚚 Entrega</h2>`;
+    
+    html += `<label class="option-box"><input type="radio" name="frete" value="sede" onchange="calcFrete('sede')"> Retirar na Sede (Sítio Boa Ventura)</label>`;
+    html += `<label class="option-box"><input type="radio" name="frete" value="cidade" onchange="calcFrete('cidade')"> Entrega/Retirada na Cidade (Grátis em ${db.cidadesGratis.join(', ')})</label>`;
+    html += `<label class="option-box"><input type="radio" name="frete" value="envio" onchange="calcFrete('envio')"> Transportadora (+ ${formatMoney(db.taxaEnvio)})</label>`;
+    
+    html += `<div id="area-detalhe-frete" class="hidden" style="margin-top:15px"><label>Endereço / Local:</label><textarea id="end-text"></textarea></div>`;
+    
+    html += `<div id="area-pagamento" style="margin-top:20px; padding-top:20px; border-top:1px dashed #ccc"></div>`;
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function calcFrete(tipo) {
+    const db = AppState.config.logistica;
+    AppState.custoFrete = (tipo === 'envio') ? db.taxaEnvio : 0;
+    AppState.dadosEntrega.tipo = tipo;
+    
+    if(tipo !== 'sede') document.getElementById('area-detalhe-frete').classList.remove('hidden');
+    else document.getElementById('area-detalhe-frete').classList.add('hidden');
+    
+    renderPagamento();
+}
+
+function renderPagamento() {
+    const totalProd = AppState.totalFinanceiro;
+    const frete = AppState.custoFrete;
+    const entrada = AppState.config.cliente.entrada || 0;
+    
+    // Lógica Contrato: Se tem contrato, a entrada já foi considerada "parte paga".
+    // Se é venda avulsa, a entrada abate agora.
+    // Para simplificar V9: Total Final = (Prod + Frete + SaldoContrato) - Entrada
+    
+    // Se for contrato, o valor do "Prod" já é o upgrade. O valor base do contrato deve ser somado se não foi pago.
+    // Vamos assumir que TotalFinanceiro já é o saldo "extra" calculado na produção.
+    
+    let saldoFinal = totalProd + frete;
+    
+    // Se for avulso (sem contrato de album) e tem entrada, abate.
+    if (!AppState.config.cliente.incluirAlbum && entrada > 0) {
+        saldoFinal = Math.max(0, saldoFinal - entrada);
+    }
+    // Se for contrato, a entrada geralmente abate do valor total do contrato. 
+    // O sistema aqui foca em "Extras". Vamos considerar que o contrato base está ok, cobrando apenas extras + frete.
+    // Se quiser cobrar o saldo do contrato, teria que somar (ValorContrato - Entrada).
+    if (AppState.config.cliente.incluirAlbum) {
+        const saldoContrato = AppState.config.cliente.contrato.valorTotal - entrada;
+        if(saldoContrato > 0) {
+             // Opcional: Mostrar saldo devedor do contrato
+        }
+    }
+
+    let html = `<h3>💳 Resumo</h3>
+    <div style="background:#f0f9ff; padding:15px; border-radius:8px">
+        ${AppState.carrinho.map(c=>`<div>${c.item}: ${formatMoney(c.valor)}</div>`).join('')}
+        <div>Frete: ${formatMoney(frete)}</div>
+        ${(!AppState.config.cliente.incluirAlbum && entrada>0) ? `<div style="color:red">Entrada: - ${formatMoney(entrada)}</div>` : ''}
+        <hr>
+        <div style="font-size:1.2rem; font-weight:bold; color:var(--primary)">Total a Pagar: ${formatMoney(saldoFinal)}</div>
+    </div>
+    
+    <label style="margin-top:15px; display:block">Forma de Pagamento:</label>
+    <select id="pag-tipo">
+        <option value="pix">Pix (${AppState.config.financeiro.descontoPix}% desc)</option>
+        <option value="cartao">Cartão de Crédito</option>
+        <option value="dinheiro">Dinheiro na Retirada</option>
+    </select>
+
+    <button class="btn btn-whatsapp" onclick="enviarPedido(${saldoFinal})" style="margin-top:20px">Finalizar no WhatsApp <i class="fab fa-whatsapp"></i></button>
+    `;
+    document.getElementById('area-pagamento').innerHTML = html;
+}
+
+function enviarPedido(total) {
+    const pag = document.getElementById('pag-tipo').value;
+    const end = document.getElementById('end-text') ? document.getElementById('end-text').value : '';
+    let msg = `*PEDIDO - ${AppState.config.cliente.nome}*\n\n`;
+    AppState.carrinho.forEach(c => msg += `• ${c.item}\n`);
+    msg += `\nFrete: ${AppState.dadosEntrega.tipo} ${end ? '('+end+')' : ''}\n`;
+    msg += `Pagamento: ${pag}\n`;
+    msg += `*TOTAL FINAL: ${formatMoney(total)}*\n`;
+    
+    window.open(`https://wa.me/${AppState.config.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+window.onload = StartApp;
+</script>
+</body>
+</html>
