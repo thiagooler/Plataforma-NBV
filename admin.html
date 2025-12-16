@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>NBV Command Center V4</title>
+    <title>NBV Command Center V5.5</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,8 +20,8 @@
             --sidebar: #ffffff;
             --text: #1f2937;
             --border: #e5e7eb;
-            --danger: #ef4444;
-            --success: #10b981;
+            --danger: #dc2626;
+            --success: #16a34a;
             --github: #24292e;
             --highlight: #e0f2fe;
         }
@@ -45,7 +45,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; color: #111827; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        h4 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; }
+        h4 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; font-size: 1.1rem; }
         
         /* Forms */
         .form-group { margin-bottom: 15px; }
@@ -56,7 +56,8 @@
 
         /* Dynamic Lists */
         .list-item { background: #fff; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; }
-        .btn-remove { background: #fee2e2; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-remove { background: #fee2e2; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-remove:hover { background: #fecaca; }
         
         /* Table Editor */
         .table-header { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 5px; padding: 0 5px; font-size: 0.8rem; font-weight: bold; color: #666; margin-bottom: 5px; }
@@ -111,7 +112,7 @@
             </div>
             <div class="form-group">
                 <label>Links das Fotos (Alta Resolução)</label>
-                <textarea id="cliFotos" rows="6" placeholder="https://..."></textarea>
+                <textarea id="cliFotos" rows="6" placeholder="https://... (Um link por linha)"></textarea>
             </div>
             
             <h4>Contrato e Pagamentos</h4>
@@ -134,7 +135,7 @@
             </div>
 
             <div id="detalhes-contrato" style="display:none; background:var(--highlight); padding:15px; border-radius:8px; border:1px solid #bae6fd; margin-bottom:20px">
-                <h5 style="margin-top:0; color:var(--primary); margin-bottom:10px">Detalhes do Álbum Contratado</h5>
+                <h5 style="margin-top:0; color:var(--primary); margin-bottom:10px; font-weight:bold">Detalhes do Álbum Contratado</h5>
                 <p style="font-size:0.85rem; color:#555; margin-bottom:15px">Estes dados baseiam o cálculo de upgrade.</p>
                 
                 <div class="row">
@@ -153,15 +154,15 @@
                 </div>
                 <div class="form-group" style="margin-top:10px">
                     <label>Valor de Crédito do Álbum (R$)</label>
-                    <input type="number" id="ctrValorCredito" placeholder="Ex: 800.00">
-                    <small>Preço atual de venda deste álbum para abater no upgrade.</small>
+                    <input type="number" id="ctrValorCredito" placeholder="Ex: 700.00 (Valor de venda deste álbum)">
+                    <small style="color:#666">Defina o valor deste item dentro do contrato global. Se o contrato total é R$ 2000, mas o álbum vale R$ 700, coloque 700 aqui.</small>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Créditos Extras (Itens que o cliente já tem)</label>
+                <label>Créditos Extras (Produtos inclusos no pacote)</label>
                 <div id="creditos-list"></div>
-                <button class="btn btn-add" onclick="addCreditoRow()">+ Adicionar Crédito (Ex: 1 Quadro)</button>
+                <button class="btn btn-add" onclick="addCreditoRow()">+ Adicionar Crédito (Selecione da Lista)</button>
             </div>
         </div>
 
@@ -234,12 +235,11 @@
         // --- 1. Inicialização ---
         window.onload = function() {
             carregarCredenciaisLocal();
-            // Verifica se database.js carregou
             if(window.NBV_DB) {
                 carregarDB(window.NBV_DB);
                 log("Dados carregados com sucesso.");
             } else {
-                alert("AVISO: database.js não encontrado. O sistema usará valores vazios.");
+                alert("AVISO: database.js não encontrado. Use o Live Server.");
             }
         };
 
@@ -275,6 +275,7 @@
                     </div>`;
             }
 
+            // Produtos (Carrega primeiro para o dropdown de créditos funcionar)
             const tbProd = document.getElementById('produtos-list');
             tbProd.innerHTML = '';
             db.produtosAvulsos.forEach(p => addProdRow(p));
@@ -314,7 +315,7 @@
                     nome: document.getElementById('cliName').value,
                     entrada: Number(document.getElementById('cliEntrada').value),
                     incluirAlbum: document.getElementById('cliIncluirAlbum').value === 'sim',
-                    // Contrato detalhado
+                    // Contrato detalhado com Valor Manual
                     contrato: {
                         tamanho: document.getElementById('ctrSize').value,
                         qtdFotos: Number(document.getElementById('ctrQtdFotos').value),
@@ -356,7 +357,7 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            // Encontra o botão clicado e ativa
+            
             const buttons = Array.from(document.querySelectorAll('.nav-btn'));
             const targetIndex = ['tab-cliente','tab-fotolivro','tab-produtos','tab-fluxo','tab-financeiro','tab-github'].indexOf(id);
             if(targetIndex >= 0) buttons[targetIndex].classList.add('active');
@@ -389,11 +390,32 @@
             document.getElementById('produtos-list').insertAdjacentHTML('beforeend', html);
         }
 
-        function addCreditoRow() {
+        // V5: Créditos baseados nos produtos existentes
+        function addCreditoRow(data={}) {
+            // Pega os produtos que existem AGORA na aba Produtos
+            const produtosDisponiveis = [];
+            document.querySelectorAll('.prod-row .pd-name').forEach(inp => {
+                if(inp.value) produtosDisponiveis.push(inp.value);
+            });
+            
+            // Cria as opções do Select
+            let optionsHtml = '<option value="">-- Selecione o Item --</option>';
+            produtosDisponiveis.forEach(prodName => {
+                const selected = (data.item === prodName) ? 'selected' : '';
+                optionsHtml += `<option value="${prodName}" ${selected}>${prodName}</option>`;
+            });
+
+            // Se o item salvo não estiver na lista (ex: foi deletado), adiciona ele pra não quebrar
+            if(data.item && !produtosDisponiveis.includes(data.item)) {
+                optionsHtml += `<option value="${data.item}" selected>${data.item} (Arquivado)</option>`;
+            }
+
             const html = `
                 <div class="list-item credito-row">
-                    <input type="text" class="cred-name" placeholder="Item (Ex: Foto 10x15)" style="flex:2">
-                    <input type="number" class="cred-qtd" placeholder="Qtd" value="1" style="width:60px">
+                    <select class="cred-name" style="flex:2">
+                        ${optionsHtml}
+                    </select>
+                    <input type="number" class="cred-qtd" placeholder="Qtd" value="${data.qtd||1}" style="width:60px">
                     <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
                 </div>`;
             document.getElementById('creditos-list').insertAdjacentHTML('beforeend', html);
