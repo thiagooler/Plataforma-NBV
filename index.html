@@ -26,7 +26,7 @@ img{max-width:100%;border-radius:8px}
 .stepper{display:flex;gap:10px}
 .stepper button{background:#475569;border:none;color:#fff;width:30px;height:30px;border-radius:4px;cursor:pointer}
 
-/* Boleto */
+/* Boleto & Inputs */
 input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; }
 .alert-box { background: #334155; padding: 10px; border-radius: 6px; font-size: 13px; color: #cbd5e1; margin-top: 10px; }
 </style>
@@ -41,19 +41,29 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0f172a
 <script src="config_cliente.js"></script>
 
 <script>
-// --- LOGICA DO SITE V8.1 ---
 const App = {
     data: {},
-    state: { view: 'intro', idx: 0, mode: 'avulso', sel: [], pag: 'pix', frete: 'sede' },
+    state: { view: 'intro', idx: 0, mode: 'avulso', sel: [], pag: 'pix', frete: 'sede', simpleMode: false },
 
     init() {
         if(!window.NBV_CONFIG) return document.getElementById('app').innerHTML = "Erro: Config não encontrada.";
-        // Mescla Config do Cliente com Database Global
         this.data = { ...window.NBV_DB, ...window.NBV_CONFIG };
         this.data.financeiro = { ...window.NBV_DB.financeiro, ...window.NBV_CONFIG.financeiro };
         
         // Inicializa Seleção
-        this.state.sel = this.data.fotos.map(url => ({ inAlbum: false, extras: {} }));
+        this.state.sel = this.data.fotos.map(url => ({ inAlbum: false, isApproved: false, extras: {} }));
+        
+        // LÓGICA DE DECISÃO DE ROTA
+        if (this.data.fluxo.pedirEdicao) {
+            // Rota A: Venda Completa
+            this.state.simpleMode = false;
+            this.state.view = 'intro';
+        } else {
+            // Rota B: Aprovação Simples (Sem Compras)
+            this.state.simpleMode = true;
+            this.state.mode = 'aprovacao_simples';
+            this.state.view = 'workstation';
+        }
         
         this.render();
     },
@@ -67,19 +77,16 @@ const App = {
             html = `
             <div class="container">
                 <h2>Olá, ${this.data.cliente.nome}!</h2>
-                <div class="card">
-                    <p>Estamos prontos para produzir suas <strong>${this.data.fotos.length} fotos</strong>.</p>
-                    <p>Antes de começar, precisamos saber sobre a edição:</p>
-                </div>
+                <div class="card"><p>Antes de produzir, precisamos saber sobre a edição:</p></div>
                 <div class="card">
                     <h3>✨ Opção 1: Com Edição</h3>
-                    <p style="color:#94a3b8;font-size:14px;text-align:center">Tratamento de pele, cor e luz.<br>Prazo: 30 dias.</p>
+                    <p style="color:#94a3b8;font-size:14px;text-align:center">Tratamento artístico. Prazo: 30 dias.</p>
                     <button class="btn" onclick="App.escolherEdicao(true)">Quero com Edição</button>
                 </div>
                 <div class="card">
                     <h3>⚡ Opção 2: Produção Rápida</h3>
-                    <p style="color:#94a3b8;font-size:14px;text-align:center">Fotos originais (sem tratamento extra).<br>Prazo: 10 dias.</p>
-                    <button class="btn btn-outline" onclick="App.escolherEdicao(false)">Sem Edição (Mais Rápido)</button>
+                    <p style="color:#94a3b8;font-size:14px;text-align:center">Fotos originais. Prazo: 10 dias.</p>
+                    <button class="btn btn-outline" onclick="App.escolherEdicao(false)">Sem Edição</button>
                 </div>
             </div>`;
         }
@@ -104,21 +111,10 @@ const App = {
         else if(view === 'modo') {
             const temMinimo = this.data.fotos.length >= (this.data.fluxo.minimoFotosLivro || 20);
             html = `<div class="container"><h2>Como deseja produzir?</h2>`;
-            
             if(temMinimo) {
-                html += `
-                <div class="card">
-                    <h3>📚 Fazer Fotolivro</h3>
-                    <p style="color:#94a3b8;text-align:center">Montaremos um álbum lindo.</p>
-                    <button class="btn" onclick="App.setMode('album')">Montar Álbum</button>
-                </div>`;
+                html += `<div class="card"><h3>📚 Fazer Fotolivro</h3><p style="color:#94a3b8;text-align:center">Montaremos um álbum lindo.</p><button class="btn" onclick="App.setMode('album')">Montar Álbum</button></div>`;
             }
-            html += `
-                <div class="card">
-                    <h3>🖼️ Apenas Revelações</h3>
-                    <p style="color:#94a3b8;text-align:center">Fotos avulsas, quadros ou arquivos.</p>
-                    <button class="btn btn-outline" onclick="App.setMode('avulso')">Revelações Avulsas</button>
-                </div></div>`;
+            html += `<div class="card"><h3>🖼️ Apenas Revelações</h3><p style="color:#94a3b8;text-align:center">Fotos avulsas, quadros ou arquivos.</p><button class="btn btn-outline" onclick="App.setMode('avulso')">Revelações Avulsas</button></div></div>`;
         }
         else if(view === 'workstation') {
             const foto = this.data.fotos[this.state.idx];
@@ -136,60 +132,84 @@ const App = {
                     <img src="${foto}">
                 </div>
 
-                ${this.state.mode === 'album' ? `
+                ${this.state.simpleMode ? `
+                <div class="opt-row" style="background:${sel.isApproved?'#22c55e':'#334155'};cursor:pointer;margin-top:15px" onclick="App.toggleApprove()">
+                    <strong>✅ APROVAR FOTO</strong>
+                    <span>${sel.isApproved ? 'SIM' : 'NÃO'}</span>
+                </div>
+                ` : ''}
+
+                ${!this.state.simpleMode && this.state.mode === 'album' ? `
                 <div class="opt-row" style="background:${sel.inAlbum?'#22c55e':'#334155'};cursor:pointer" onclick="App.toggleAlbum()">
                     <strong>📚 Incluir no Álbum</strong>
                     <span>${sel.inAlbum ? 'SIM' : 'NÃO'}</span>
                 </div>` : ''}
 
+                ${!this.state.simpleMode ? `
                 <div class="card" style="margin-top:10px">
-                    <h4 style="margin:0 0 10px 0;color:#94a3b8">Adicionar Produtos nesta foto:</h4>
+                    <h4 style="margin:0 0 10px 0;color:#94a3b8">Produtos nesta foto:</h4>
                     ${this.renderProdList(sel)}
-                </div>
+                </div>` : ''}
 
-                <button class="btn btn-success" onclick="App.checkout()">Finalizar Pedido ➔</button>
+                <button class="btn btn-success" onclick="App.checkout()">${this.state.simpleMode ? 'Enviar Seleção' : 'Finalizar Pedido'} ➔</button>
             </div>`;
         }
         else if(view === 'checkout') {
-            const resumo = this.calcularTotal();
-            html = `
-            <div class="container">
-                <h2>Resumo do Pedido</h2>
-                <div class="card" style="font-family:monospace;font-size:13px;white-space:pre-wrap">${resumo.texto}</div>
-                
-                <div class="card">
-                    <h3>🚚 Entrega</h3>
-                    <select id="frete" onchange="App.setFrete(this.value)">
-                        <option value="sede" ${this.state.frete=='sede'?'selected':''}>Retirar na Sede</option>
-                        <option value="gratis" ${this.state.frete=='gratis'?'selected':''}>Frete Grátis (${this.data.logistica.cidadesGratis.join(', ')})</option>
-                        <option value="transp" ${this.state.frete=='transp'?'selected':''}>Transportadora (+ R$ ${this.data.logistica.taxaEnvio})</option>
-                    </select>
-                    ${this.state.frete !== 'sede' ? `<input type="text" id="endereco" placeholder="Endereço de Entrega / Local de Retirada na Cidade">` : ''}
-                </div>
-
-                <div class="card">
-                    <h3>💳 Pagamento</h3>
-                    <div style="display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px;font-weight:bold;color:#22c55e">
-                        <span>Total Final:</span>
-                        <span>R$ ${resumo.total.toFixed(2)}</span>
+            if(this.state.simpleMode) {
+                // CHECKOUT SIMPLES (Só lista)
+                const aprovadas = this.state.sel.filter(s => s.isApproved).length;
+                html = `
+                <div class="container">
+                    <h2>Seleção Concluída</h2>
+                    <div class="card">
+                        <p style="text-align:center;font-size:18px">Você aprovou <strong>${aprovadas}</strong> fotos.</p>
+                        <p style="color:#94a3b8;text-align:center">Clique abaixo para enviar a lista para o fotógrafo.</p>
                     </div>
-                    <select id="pag" onchange="App.setPag(this.value)">
-                        <option value="pix" ${this.state.pag=='pix'?'selected':''}>Pix (5% Desconto)</option>
-                        <option value="cartao" ${this.state.pag=='cartao'?'selected':''}>Cartão de Crédito</option>
-                        <option value="boleto" ${this.state.pag=='boleto'?'selected':''}>Boleto (até 6x)</option>
-                    </select>
+                    <button class="btn btn-success" onclick="App.enviarZapSimples()">Enviar no WhatsApp</button>
+                    <button class="btn btn-outline" onclick="App.setMode('aprovacao_simples')">Voltar</button>
+                </div>`;
+            } else {
+                // CHECKOUT DE VENDA (Com Preço, Frete, Boleto)
+                const resumo = this.calcularTotal();
+                html = `
+                <div class="container">
+                    <h2>Resumo do Pedido</h2>
+                    <div class="card" style="font-family:monospace;font-size:13px;white-space:pre-wrap">${resumo.texto}</div>
+                    
+                    <div class="card">
+                        <h3>🚚 Frete / Entrega</h3>
+                        <select id="frete" onchange="App.setFrete(this.value)">
+                            <option value="sede" ${this.state.frete=='sede'?'selected':''}>Retirar na Sede</option>
+                            <option value="gratis" ${this.state.frete=='gratis'?'selected':''}>Frete Grátis (${this.data.logistica.cidadesGratis.join(', ')})</option>
+                            <option value="transp" ${this.state.frete=='transp'?'selected':''}>Transportadora (+ R$ ${this.data.logistica.taxaEnvio})</option>
+                        </select>
+                        ${this.state.frete !== 'sede' ? `<input type="text" id="endereco" placeholder="Endereço de Entrega / Local de Retirada na Cidade">` : ''}
+                    </div>
 
-                    ${this.state.pag === 'boleto' ? `
-                    <div class="alert-box">
-                        <label>Nome Completo</label><input type="text" id="bol_nome">
-                        <label>CPF</label><input type="text" id="bol_cpf">
-                        <label>Vencimento</label><input type="date" id="bol_data">
-                    </div>` : ''}
-                </div>
+                    <div class="card">
+                        <h3>💳 Pagamento</h3>
+                        <div style="display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px;font-weight:bold;color:#22c55e">
+                            <span>Total Final:</span>
+                            <span>R$ ${resumo.total.toFixed(2)}</span>
+                        </div>
+                        <select id="pag" onchange="App.setPag(this.value)">
+                            <option value="pix" ${this.state.pag=='pix'?'selected':''}>Pix (5% Desconto)</option>
+                            <option value="cartao" ${this.state.pag=='cartao'?'selected':''}>Cartão de Crédito</option>
+                            <option value="boleto" ${this.state.pag=='boleto'?'selected':''}>Boleto (até 6x)</option>
+                        </select>
 
-                <button class="btn btn-success" onclick="App.enviarZap()">Enviar Pedido no WhatsApp</button>
-                <button class="btn btn-outline" onclick="App.setMode(App.state.mode)">Voltar e Editar</button>
-            </div>`;
+                        ${this.state.pag === 'boleto' ? `
+                        <div class="alert-box">
+                            <label>Nome Completo</label><input type="text" id="bol_nome">
+                            <label>CPF</label><input type="text" id="bol_cpf">
+                            <label>Vencimento</label><input type="date" id="bol_data">
+                        </div>` : ''}
+                    </div>
+
+                    <button class="btn btn-success" onclick="App.enviarZap()">Enviar Pedido no WhatsApp</button>
+                    <button class="btn btn-outline" onclick="App.setMode(App.state.mode)">Voltar e Editar</button>
+                </div>`;
+            }
         }
 
         app.innerHTML = html;
@@ -198,8 +218,7 @@ const App = {
     // AÇÕES
     escolherEdicao(quer) {
         if(quer) {
-            const link = `https://wa.me/${this.data.financeiro.whatsapp}?text=Ola, gostaria de solicitar Edicao Artistica nas fotos (Prazo 30 dias).`;
-            window.location.href = link;
+            window.location.href = `https://wa.me/${this.data.financeiro.whatsapp}?text=Ola, gostaria de solicitar Edicao Artistica.`;
         } else {
             this.state.view = 'apresentacao';
             this.render();
@@ -212,6 +231,7 @@ const App = {
     setMode(m) { this.state.mode = m; this.state.view = 'workstation'; this.render(); },
     nav(d) { this.state.idx = (this.state.idx + d + this.data.fotos.length) % this.data.fotos.length; this.render(); },
     toggleAlbum() { this.state.sel[this.state.idx].inAlbum = !this.state.sel[this.state.idx].inAlbum; this.render(); },
+    toggleApprove() { this.state.sel[this.state.idx].isApproved = !this.state.sel[this.state.idx].isApproved; this.render(); },
     
     renderProdList(sel) {
         return this.data.produtosAvulsos.map(p => {
@@ -246,10 +266,6 @@ const App = {
         if(this.state.mode === 'album') {
             const qtd = this.state.sel.filter(s=>s.inAlbum).length;
             const ctr = this.data.cliente.contrato || {};
-            
-            // Lógica Simplificada para Exemplo (Contrato vs Extra)
-            // No real, usaria a tabela complexa do database.js
-            // Aqui vamos assumir R$ 25,00 por foto extra se exceder contrato
             const contratadas = ctr.qtdFotos || 0;
             let valorAlbum = 0;
             
@@ -264,7 +280,7 @@ const App = {
                     texto += `   (Coberto pelo Contrato)\n`;
                 }
                 
-                if(ctr.valorTotal > 0) {
+                if(this.data.cliente.incluirAlbum && ctr.valorTotal > 0) {
                     texto += `📄 Contrato Base: R$ ${ctr.valorTotal.toFixed(2)}\n`;
                     valorAlbum += ctr.valorTotal;
                 }
@@ -320,6 +336,14 @@ const App = {
             msg += `📍 Retirada na Sede\n`;
         }
 
+        window.open(`https://wa.me/${this.data.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`);
+    },
+
+    enviarZapSimples() {
+        const aprovadas = this.state.sel.map((s, i) => s.isApproved ? (i+1) : null).filter(x => x);
+        let msg = `*SELEÇÃO DE FOTOS - ${this.data.cliente.nome}*\n\n`;
+        msg += `Total Aprovadas: ${aprovadas.length}\n`;
+        msg += `Índices: ${aprovadas.join(', ')}`;
         window.open(`https://wa.me/${this.data.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`);
     }
 };
