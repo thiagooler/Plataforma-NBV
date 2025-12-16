@@ -1,52 +1,330 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio NBV - Seleção e Pedido</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Pedido Studio NBV</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--primary:#3b82f6;--success:#22c55e;--danger:#ef4444}
+* { box-sizing: border-box; }
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:100px}
+.container{max-width:600px;margin:0 auto;padding:20px}
+.hidden{display:none !important}
+.card{background:var(--card);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid #334155}
+.btn{background:var(--primary);color:#fff;border:none;padding:15px;width:100%;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;display:block;text-align:center;text-decoration:none;margin-top:10px}
+.btn-success{background:var(--success)}
+.btn-outline{background:transparent;border:1px solid #475569;color:#94a3b8}
+h2,h3{margin-top:0;color:#fff;text-align:center}
+img{max-width:100%;border-radius:8px}
+
+/* Workstation */
+.work-grid{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.photo-container{position:relative;background:#000;min-height:300px;display:flex;align-items:center;border-radius:8px;overflow:hidden}
+.photo-container img{width:100%;pointer-events:none}
+.opt-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px;background:#334155;border-radius:6px}
+.stepper{display:flex;gap:10px}
+.stepper button{background:#475569;border:none;color:#fff;width:30px;height:30px;border-radius:4px;cursor:pointer}
+
+/* Boleto */
+input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; }
+.alert-box { background: #334155; padding: 10px; border-radius: 6px; font-size: 13px; color: #cbd5e1; margin-top: 10px; }
+</style>
 </head>
 <body>
 
-    <header class="main-header">
-        <div class="logo">Studio<span>NBV</span></div>
-        <div class="steps">
-            <div class="step active" id="step-aprovacao"><i class="fas fa-check"></i> <span>Seleção</span></div>
-            <div class="step" id="step-producao"><i class="fas fa-box-open"></i> <span>Produtos</span></div>
-            <div class="step" id="step-entrega"><i class="fas fa-truck"></i> <span>Entrega</span></div>
-        </div>
-    </header>
+<div id="app">
+    <div style="text-align:center;padding:50px">Carregando...</div>
+</div>
 
-    <main id="app-container">
-        <div class="loading-screen">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Carregando suas fotos...</p>
-        </div>
-    </main>
+<script src="js/database.js"></script>
+<script src="config_cliente.js"></script>
 
-    <script src="config_cliente.js"></script>
-    
-    <script src="js/database.js"></script>
+<script>
+// --- LOGICA DO SITE V8.1 ---
+const App = {
+    data: {},
+    state: { view: 'intro', idx: 0, mode: 'avulso', sel: [], pag: 'pix', frete: 'sede' },
 
-    <script src="js/core.js"></script>
-    <script src="js/mod_aprovacao.js"></script>
-    <script src="js/mod_producao.js"></script>
-    <script src="js/mod_entrega.js"></script>
-    <script src="js/mod_pagamento.js"></script>
+    init() {
+        if(!window.NBV_CONFIG) return document.getElementById('app').innerHTML = "Erro: Config não encontrada.";
+        // Mescla Config do Cliente com Database Global
+        this.data = { ...window.NBV_DB, ...window.NBV_CONFIG };
+        this.data.financeiro = { ...window.NBV_DB.financeiro, ...window.NBV_CONFIG.financeiro };
+        
+        // Inicializa Seleção
+        this.state.sel = this.data.fotos.map(url => ({ inAlbum: false, extras: {} }));
+        
+        this.render();
+    },
 
-    <script>
-        // Inicia o Sistema
-        document.addEventListener('DOMContentLoaded', () => {
-            if(typeof StartApp === 'function') {
-                StartApp();
-            } else {
-                document.getElementById('app-container').innerHTML = 
-                '<div style="text-align:center; padding:50px; color:red">Erro: js/core.js não carregou. Verifique a pasta js.</div>';
+    render() {
+        const app = document.getElementById('app');
+        const view = this.state.view;
+        let html = '';
+
+        if(view === 'intro') {
+            html = `
+            <div class="container">
+                <h2>Olá, ${this.data.cliente.nome}!</h2>
+                <div class="card">
+                    <p>Estamos prontos para produzir suas <strong>${this.data.fotos.length} fotos</strong>.</p>
+                    <p>Antes de começar, precisamos saber sobre a edição:</p>
+                </div>
+                <div class="card">
+                    <h3>✨ Opção 1: Com Edição</h3>
+                    <p style="color:#94a3b8;font-size:14px;text-align:center">Tratamento de pele, cor e luz.<br>Prazo: 30 dias.</p>
+                    <button class="btn" onclick="App.escolherEdicao(true)">Quero com Edição</button>
+                </div>
+                <div class="card">
+                    <h3>⚡ Opção 2: Produção Rápida</h3>
+                    <p style="color:#94a3b8;font-size:14px;text-align:center">Fotos originais (sem tratamento extra).<br>Prazo: 10 dias.</p>
+                    <button class="btn btn-outline" onclick="App.escolherEdicao(false)">Sem Edição (Mais Rápido)</button>
+                </div>
+            </div>`;
+        }
+        else if(view === 'apresentacao') {
+            const pres = this.data.apresentacao || {};
+            html = `
+            <div class="container">
+                <h2>Conheça nossos Produtos</h2>
+                <div class="card">
+                    <img src="${pres.book?.img || ''}" style="height:200px;object-fit:cover;width:100%">
+                    <h3>📚 Fotolivros</h3>
+                    <p>${pres.book?.text || ''}</p>
+                </div>
+                <div class="card">
+                    <img src="${pres.print?.img || ''}" style="height:200px;object-fit:cover;width:100%">
+                    <h3>🖼️ Revelações</h3>
+                    <p>${pres.print?.text || ''}</p>
+                </div>
+                <button class="btn" onclick="App.irParaModo()">Entendi, quero escolher!</button>
+            </div>`;
+        }
+        else if(view === 'modo') {
+            const temMinimo = this.data.fotos.length >= (this.data.fluxo.minimoFotosLivro || 20);
+            html = `<div class="container"><h2>Como deseja produzir?</h2>`;
+            
+            if(temMinimo) {
+                html += `
+                <div class="card">
+                    <h3>📚 Fazer Fotolivro</h3>
+                    <p style="color:#94a3b8;text-align:center">Montaremos um álbum lindo.</p>
+                    <button class="btn" onclick="App.setMode('album')">Montar Álbum</button>
+                </div>`;
             }
-        });
-    </script>
+            html += `
+                <div class="card">
+                    <h3>🖼️ Apenas Revelações</h3>
+                    <p style="color:#94a3b8;text-align:center">Fotos avulsas, quadros ou arquivos.</p>
+                    <button class="btn btn-outline" onclick="App.setMode('avulso')">Revelações Avulsas</button>
+                </div></div>`;
+        }
+        else if(view === 'workstation') {
+            const foto = this.data.fotos[this.state.idx];
+            const sel = this.state.sel[this.state.idx];
+            
+            html = `
+            <div class="container">
+                <div class="work-grid">
+                    <button class="btn-outline" onclick="App.nav(-1)" style="width:auto">❮</button>
+                    <span>${this.state.idx + 1} / ${this.data.fotos.length}</span>
+                    <button class="btn-outline" onclick="App.nav(1)" style="width:auto">❯</button>
+                </div>
+                
+                <div class="photo-container">
+                    <img src="${foto}">
+                </div>
 
+                ${this.state.mode === 'album' ? `
+                <div class="opt-row" style="background:${sel.inAlbum?'#22c55e':'#334155'};cursor:pointer" onclick="App.toggleAlbum()">
+                    <strong>📚 Incluir no Álbum</strong>
+                    <span>${sel.inAlbum ? 'SIM' : 'NÃO'}</span>
+                </div>` : ''}
+
+                <div class="card" style="margin-top:10px">
+                    <h4 style="margin:0 0 10px 0;color:#94a3b8">Adicionar Produtos nesta foto:</h4>
+                    ${this.renderProdList(sel)}
+                </div>
+
+                <button class="btn btn-success" onclick="App.checkout()">Finalizar Pedido ➔</button>
+            </div>`;
+        }
+        else if(view === 'checkout') {
+            const resumo = this.calcularTotal();
+            html = `
+            <div class="container">
+                <h2>Resumo do Pedido</h2>
+                <div class="card" style="font-family:monospace;font-size:13px;white-space:pre-wrap">${resumo.texto}</div>
+                
+                <div class="card">
+                    <h3>🚚 Entrega</h3>
+                    <select id="frete" onchange="App.setFrete(this.value)">
+                        <option value="sede" ${this.state.frete=='sede'?'selected':''}>Retirar na Sede</option>
+                        <option value="gratis" ${this.state.frete=='gratis'?'selected':''}>Frete Grátis (${this.data.logistica.cidadesGratis.join(', ')})</option>
+                        <option value="transp" ${this.state.frete=='transp'?'selected':''}>Transportadora (+ R$ ${this.data.logistica.taxaEnvio})</option>
+                    </select>
+                    ${this.state.frete !== 'sede' ? `<input type="text" id="endereco" placeholder="Endereço de Entrega / Local de Retirada na Cidade">` : ''}
+                </div>
+
+                <div class="card">
+                    <h3>💳 Pagamento</h3>
+                    <div style="display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px;font-weight:bold;color:#22c55e">
+                        <span>Total Final:</span>
+                        <span>R$ ${resumo.total.toFixed(2)}</span>
+                    </div>
+                    <select id="pag" onchange="App.setPag(this.value)">
+                        <option value="pix" ${this.state.pag=='pix'?'selected':''}>Pix (5% Desconto)</option>
+                        <option value="cartao" ${this.state.pag=='cartao'?'selected':''}>Cartão de Crédito</option>
+                        <option value="boleto" ${this.state.pag=='boleto'?'selected':''}>Boleto (até 6x)</option>
+                    </select>
+
+                    ${this.state.pag === 'boleto' ? `
+                    <div class="alert-box">
+                        <label>Nome Completo</label><input type="text" id="bol_nome">
+                        <label>CPF</label><input type="text" id="bol_cpf">
+                        <label>Vencimento</label><input type="date" id="bol_data">
+                    </div>` : ''}
+                </div>
+
+                <button class="btn btn-success" onclick="App.enviarZap()">Enviar Pedido no WhatsApp</button>
+                <button class="btn btn-outline" onclick="App.setMode(App.state.mode)">Voltar e Editar</button>
+            </div>`;
+        }
+
+        app.innerHTML = html;
+    },
+
+    // AÇÕES
+    escolherEdicao(quer) {
+        if(quer) {
+            const link = `https://wa.me/${this.data.financeiro.whatsapp}?text=Ola, gostaria de solicitar Edicao Artistica nas fotos (Prazo 30 dias).`;
+            window.location.href = link;
+        } else {
+            this.state.view = 'apresentacao';
+            this.render();
+        }
+    },
+    irParaModo() {
+        if(this.data.fotos.length < 20) this.setMode('avulso');
+        else { this.state.view = 'modo'; this.render(); }
+    },
+    setMode(m) { this.state.mode = m; this.state.view = 'workstation'; this.render(); },
+    nav(d) { this.state.idx = (this.state.idx + d + this.data.fotos.length) % this.data.fotos.length; this.render(); },
+    toggleAlbum() { this.state.sel[this.state.idx].inAlbum = !this.state.sel[this.state.idx].inAlbum; this.render(); },
+    
+    renderProdList(sel) {
+        return this.data.produtosAvulsos.map(p => {
+            const qtd = sel.extras[p.nome] || 0;
+            return `<div class="opt-row">
+                <span>${p.nome} (R$ ${p.preco})</span>
+                <div class="stepper">
+                    <button onclick="App.addProd('${p.nome}', -1)">-</button>
+                    <span>${qtd}</span>
+                    <button onclick="App.addProd('${p.nome}', 1)">+</button>
+                </div>
+            </div>`;
+        }).join('');
+    },
+    addProd(nome, d) {
+        const curr = this.state.sel[this.state.idx].extras[nome] || 0;
+        const novo = Math.max(0, curr + d);
+        if(novo === 0) delete this.state.sel[this.state.idx].extras[nome];
+        else this.state.sel[this.state.idx].extras[nome] = novo;
+        this.render();
+    },
+    
+    checkout() { this.state.view = 'checkout'; this.render(); },
+    setFrete(v) { this.state.frete = v; this.render(); },
+    setPag(v) { this.state.pag = v; this.render(); },
+
+    calcularTotal() {
+        let total = 0;
+        let texto = "";
+        
+        // 1. Fotolivro
+        if(this.state.mode === 'album') {
+            const qtd = this.state.sel.filter(s=>s.inAlbum).length;
+            const ctr = this.data.cliente.contrato || {};
+            
+            // Lógica Simplificada para Exemplo (Contrato vs Extra)
+            // No real, usaria a tabela complexa do database.js
+            // Aqui vamos assumir R$ 25,00 por foto extra se exceder contrato
+            const contratadas = ctr.qtdFotos || 0;
+            let valorAlbum = 0;
+            
+            if(qtd > 0) {
+                texto += `📚 Fotolivro: ${qtd} fotos\n`;
+                if(qtd > contratadas) {
+                    const extra = qtd - contratadas;
+                    const custoExtra = extra * 25; // Exemplo
+                    valorAlbum += custoExtra;
+                    texto += `   + ${extra} fotos extras: R$ ${custoExtra.toFixed(2)}\n`;
+                } else {
+                    texto += `   (Coberto pelo Contrato)\n`;
+                }
+                
+                if(ctr.valorTotal > 0) {
+                    texto += `📄 Contrato Base: R$ ${ctr.valorTotal.toFixed(2)}\n`;
+                    valorAlbum += ctr.valorTotal;
+                }
+                total += valorAlbum;
+            }
+        }
+
+        // 2. Avulsos
+        this.state.sel.forEach(s => {
+            Object.keys(s.extras).forEach(k => {
+                const p = this.data.produtosAvulsos.find(x=>x.nome===k);
+                const sub = p.preco * s.extras[k];
+                total += sub;
+                texto += `🖼️ ${s.extras[k]}x ${k}: R$ ${sub.toFixed(2)}\n`;
+            });
+        });
+
+        // 3. Frete
+        if(this.state.frete === 'transp') {
+            total += this.data.logistica.taxaEnvio;
+            texto += `🚚 Frete: R$ ${this.data.logistica.taxaEnvio.toFixed(2)}\n`;
+        }
+
+        // 4. Entrada (Desconto)
+        const entrada = this.data.cliente.entrada || 0;
+        if(entrada > 0) {
+            total -= entrada;
+            texto += `💰 Entrada Paga (Abatimento): - R$ ${entrada.toFixed(2)}\n`;
+        }
+        
+        if(total < 0) total = 0;
+        return { total, texto };
+    },
+
+    enviarZap() {
+        const calc = this.calcularTotal();
+        let msg = `*PEDIDO - ${this.data.cliente.nome}*\n\n${calc.texto}\n`;
+        msg += `-------------------\n*TOTAL FINAL: R$ ${calc.total.toFixed(2)}*\n`;
+        msg += `Pagamento: ${this.state.pag.toUpperCase()}\n`;
+        
+        if(this.state.pag === 'boleto') {
+            const nome = document.getElementById('bol_nome').value;
+            const cpf = document.getElementById('bol_cpf').value;
+            const data = document.getElementById('bol_data').value;
+            if(!nome || !cpf) return alert("Preencha Nome e CPF para o Boleto.");
+            msg += `Dados Boleto: ${nome}, CPF ${cpf}, Venc ${data}\n`;
+        }
+
+        if(this.state.frete !== 'sede') {
+            const end = document.getElementById('endereco') ? document.getElementById('endereco').value : 'Frete Grátis na Cidade';
+            msg += `📍 Entrega: ${end}\n`;
+        } else {
+            msg += `📍 Retirada na Sede\n`;
+        }
+
+        window.open(`https://wa.me/${this.data.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`);
+    }
+};
+
+window.onload = () => App.init();
+</script>
 </body>
 </html>
