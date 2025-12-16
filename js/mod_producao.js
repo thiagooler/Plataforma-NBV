@@ -1,8 +1,11 @@
-// --- MÓDULO DE PRODUÇÃO (V5.6 - LÓGICA DE SALDO TOTAL) ---
+// --- MÓDULO DE PRODUÇÃO (V7.0 - Com Resumo Protegido) ---
 
 function RenderProducao() {
     const container = document.getElementById('app-container');
-    const aprovadas = AppState.fotos.filter(f => f.status === 'aprovada').length;
+    
+    // Filtra apenas as fotos aprovadas
+    const fotosAprovadas = AppState.fotos.filter(f => f.status === 'aprovada');
+    const qtdAprovadas = fotosAprovadas.length;
     
     // Configurações
     const db = AppState.config;
@@ -10,36 +13,68 @@ function RenderProducao() {
     const custoFixo = db.financeiro.custoFixoDiagramacao;
     const minFotos = db.fluxo.minimoFotosLivro || 20;
 
+    // --- 1. GERAÇÃO DA MARCA D'ÁGUA (Igual à Aprovação) ---
+    const assets = db.assets || {};
+    const textoWm = assets.watermarkText || "PROIBIDO PRINT";
+    const opacidade = assets.opacity || 0.2;
+    
+    const svgPattern = `
+        <svg width='300' height='150' xmlns='http://www.w3.org/2000/svg'>
+            <text x='50%' y='50%' transform='rotate(-20 150 75)' dominant-baseline='middle' text-anchor='middle' 
+                font-family='Arial' font-weight='bold' font-size='18' fill='%23808080' fill-opacity='${opacidade}'>
+                ${textoWm}
+            </text>
+        </svg>
+    `;
+    const bgImage = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgPattern)}`;
+
+    // --- 2. HTML DO RESUMO VISUAL (Filmstrip) ---
+    let filmStripHTML = `<div class="film-strip-container">`;
+    fotosAprovadas.forEach(foto => {
+        filmStripHTML += `
+            <div class="thumb-protected">
+                <img src="${foto.url}" loading="lazy" oncontextmenu="return false;">
+                <div class="wm-overlay" style="background-image: url('${bgImage}')"></div>
+            </div>
+        `;
+    });
+    filmStripHTML += `</div>`;
+
+    // --- 3. INÍCIO DO LAYOUT ---
     let html = `
         <div class="container fade-in">
             <div class="card">
                 <h2>💎 Personalize seu Pacote</h2>
-                <p>Você selecionou <strong>${aprovadas} fotos</strong>.</p>
+                <p>Você selecionou <strong>${qtdAprovadas} fotos</strong>. Confira abaixo:</p>
+                
+                ${filmStripHTML}
     `;
 
-    if (aprovadas >= minFotos) {
+    // --- 4. LÓGICA DO FOTOLIVRO (Contrato & Upgrade) ---
+    if (qtdAprovadas >= minFotos) {
         
         const temContrato = db.cliente.incluirAlbum;
-        let valorBaseDoAlbumContratado = 0; // O "crédito" do álbum
+        let valorBaseDoAlbumContratado = 0;
         let tamanhoContratado = '';
         let fotosContratadas = 0;
 
-        // 1. DESCOBRE QUANTO VALE O ÁLBUM DO CONTRATO NA TABELA DE HOJE
+        // Descobre valor do contrato base
         if (temContrato && db.cliente.contrato) {
             const ctr = db.cliente.contrato;
             tamanhoContratado = ctr.tamanho;
             fotosContratadas = ctr.qtdFotos;
 
-            const regrasPagina = db.regrasDiagramacao[ctr.tamanho] || 4;
-            const pagsCtr = Math.ceil(ctr.qtdFotos / regrasPagina);
-            const opcoesCtr = db.tabelaFotolivros.filter(t => t.size === ctr.tamanho).sort((a,b) => a.pages - b.pages);
-            
-            // Pega o álbum que caberia as fotos contratadas
-            const opcaoCtr = opcoesCtr.find(t => t.pages >= pagsCtr) || opcoesCtr[opcoesCtr.length-1];
+            if (ctr.valorCredito && ctr.valorCredito > 0) {
+                valorBaseDoAlbumContratado = ctr.valorCredito;
+            } else {
+                const regrasPagina = db.regrasDiagramacao[ctr.tamanho] || 4;
+                const pagsCtr = Math.ceil(ctr.qtdFotos / regrasPagina);
+                const opcoesCtr = db.tabelaFotolivros.filter(t => t.size === ctr.tamanho).sort((a,b) => a.pages - b.pages);
+                const opcaoCtr = opcoesCtr.find(t => t.pages >= pagsCtr) || opcoesCtr[opcoesCtr.length-1];
 
-            if (opcaoCtr) {
-                // Esse é o valor que o sistema usa para abater do upgrade
-                valorBaseDoAlbumContratado = (opcaoCtr.priceBox + custoFixo) * markup;
+                if (opcaoCtr) {
+                    valorBaseDoAlbumContratado = (opcaoCtr.priceBox + custoFixo) * markup;
+                }
             }
         }
 
@@ -48,14 +83,12 @@ function RenderProducao() {
         let preSelectionMade = false;
 
         tamanhos.forEach(tamanho => {
-            // Verifica Limites Físicos
             const fotosPorPagina = db.regrasDiagramacao[tamanho] || 4;
             const opcoesTamanho = db.tabelaFotolivros.filter(t => t.size === tamanho).sort((a,b) => a.pages - b.pages);
             const maxPaginas = opcoesTamanho[opcoesTamanho.length - 1].pages;
             const maxFotos = maxPaginas * fotosPorPagina;
             
-            // Usa o maior entre Aprovadas e Contratadas para dimensionar
-            const fotosParaCalculo = Math.max(aprovadas, fotosContratadas);
+            const fotosParaCalculo = Math.max(qtdAprovadas, fotosContratadas);
             const paginasNecessarias = Math.ceil(fotosParaCalculo / fotosPorPagina);
             const opcaoViavel = opcoesTamanho.find(t => t.pages >= paginasNecessarias);
 
@@ -69,18 +102,15 @@ function RenderProducao() {
                 bloqueado = true;
                 textoExplica = `Capacidade excedida (${maxFotos} fotos máx).`;
             } else {
-                // Preço Cheio deste novo álbum
                 const custoTotal = opcaoViavel.priceBox + custoFixo;
                 const precoCheioNovo = custoTotal * markup;
                 
                 textoExplica = `Álbum ${tamanho} - ${opcaoViavel.pages} págs.`;
 
                 if (temContrato) {
-                    // Diferença = Novo - Base
                     let diferenca = precoCheioNovo - valorBaseDoAlbumContratado;
                     if (diferenca < 1) diferenca = 0;
-                    
-                    upgradeCost = diferenca; // Esse é o valor EXTRA que soma ao contrato
+                    upgradeCost = diferenca;
 
                     if (tamanho === tamanhoContratado) {
                         textoDestaque = "SEU PLANO";
@@ -95,13 +125,13 @@ function RenderProducao() {
                         }
                     }
                 } else {
-                    upgradeCost = precoCheioNovo; // Sem contrato, paga cheio
+                    upgradeCost = precoCheioNovo;
                     if (!preSelectionMade && tamanho === '30x40') { checked = true; preSelectionMade = true; }
                 }
             }
 
             if (bloqueado && tamanho === tamanhoContratado) {
-                textoExplica = `<span style="color:red">Limite excedido (${aprovadas} fotos). Escolha um maior.</span>`;
+                textoExplica = `<span style="color:red">Limite excedido. Escolha um maior.</span>`;
             }
 
             if (bloqueado) {
@@ -136,10 +166,10 @@ function RenderProducao() {
         html += `<div style="margin-top:20px"><h3>📚 Opções de Fotolivro</h3><div class="book-options-list">${bookOptionsHTML}</div></div>`;
 
     } else {
-        html += `<div class="alert-box"><i class="fas fa-info-circle"></i> Mínimo de ${minFotos} fotos.</div>`;
+        html += `<div class="alert-box"><i class="fas fa-info-circle"></i> Mínimo de ${minFotos} fotos para álbum.</div>`;
     }
 
-    // --- PRODUTOS AVULSOS ---
+    // --- 5. PRODUTOS AVULSOS ---
     html += `<div style="margin-top:30px; border-top:1px dashed #ccc; padding-top:20px"><h3>🖼️ Produtos Adicionais</h3><div class="showroom-grid">`;
 
     if (db.produtosAvulsos) {
@@ -166,25 +196,39 @@ function RenderProducao() {
         });
     }
 
-    // --- BARRA DE TOTAL (A LÓGICA FINAL) ---
-    // Total Contrato + Upgrade + Extras - Entrada = Restante
-    html += `
-            </div>
+    html += `</div></div><div class="card" style="margin-top:20px; text-align:right; border-top: 4px solid var(--primary); background:#f8f9fa">
+        <div style="font-size:0.9rem; color:#666; margin-bottom:5px">
+            ${db.cliente.incluirAlbum ? `Contrato Base: ${formatMoney(db.cliente.contrato.valorTotal)} <br>` : ''}
+            ${db.cliente.entrada > 0 ? `Entrada Paga: - ${formatMoney(db.cliente.entrada)} <br>` : ''}
         </div>
-        <div class="card" style="margin-top:20px; text-align:right; border-top: 4px solid var(--primary); background:#f8f9fa">
-            <div style="font-size:0.9rem; color:#666; margin-bottom:5px">
-                ${db.cliente.incluirAlbum ? `Contrato Base: ${formatMoney(db.cliente.contrato.valorTotal)} <br>` : ''}
-                ${db.cliente.entrada > 0 ? `Entrada Paga: - ${formatMoney(db.cliente.entrada)} <br>` : ''}
-            </div>
-            <h3>Restante a Pagar: <span id="total-prod-display" style="color:var(--primary)">R$ 0,00</span></h3>
-            <button class="btn btn-primary" style="width:auto; padding:15px 30px" onclick="finalizarProducao()">Avançar <i class="fas fa-arrow-right"></i></button>
-        </div>
-    </div>`;
+        <h3>Restante a Pagar: <span id="total-prod-display" style="color:var(--primary)">R$ 0,00</span></h3>
+        <button class="btn btn-primary" style="width:auto; padding:15px 30px" onclick="finalizarProducao()">Avançar <i class="fas fa-arrow-right"></i></button>
+    </div></div>`;
     
     container.innerHTML = html;
     
+    // --- 6. CSS INJETADO (FILMSTRIP + MARCA D'ÁGUA) ---
     const style = document.createElement('style');
-    style.innerHTML = `.badge { background:#0066cc; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:8px; text-transform:uppercase; vertical-align:middle; } .badge-up { background: #e67e22; } .badge-error { background: #dc2626; } .selected-plan { border: 2px solid var(--primary); background: #f0f7ff; } .disabled-plan { background: #f3f4f6; border: 1px solid #ddd; cursor: not-allowed; } .alert-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 6px; border: 1px solid #ffeeba; } .book-options-list { display: flex; flex-direction: column; gap: 10px; }`;
+    style.innerHTML = `
+        .film-strip-container { 
+            display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; 
+            border-bottom: 1px solid #eee; scrollbar-width: thin;
+        }
+        .thumb-protected { 
+            position: relative; flex: 0 0 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; 
+        }
+        .thumb-protected img { width: 100%; height: 100%; object-fit: cover; }
+        .wm-overlay { 
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            background-repeat: repeat; background-size: 100px 50px; pointer-events: none; 
+        }
+        .badge { background:#0066cc; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:8px; text-transform:uppercase; vertical-align:middle; } 
+        .badge-up { background: #e67e22; } .badge-error { background: #dc2626; } 
+        .selected-plan { border: 2px solid var(--primary); background: #f0f7ff; } 
+        .disabled-plan { background: #f3f4f6; border: 1px solid #ddd; cursor: not-allowed; } 
+        .alert-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 6px; border: 1px solid #ffeeba; } 
+        .book-options-list { display: flex; flex-direction: column; gap: 10px; }
+    `;
     document.head.appendChild(style);
 
     atualizarTotalProducao();
@@ -201,7 +245,7 @@ function mudarQtd(id, delta) {
 function atualizarTotalProducao() {
     let totalAdicional = 0;
     
-    // 1. Soma Upgrade Álbum
+    // Soma Upgrade Álbum
     const albumChoice = document.querySelector('input[name="fotolivro_choice"]:checked');
     if (albumChoice) {
         totalAdicional += parseFloat(albumChoice.dataset.upgrade);
@@ -209,7 +253,7 @@ function atualizarTotalProducao() {
         albumChoice.closest('.option-box').classList.add('selected-plan');
     }
 
-    // 2. Soma Extras
+    // Soma Extras
     const extras = document.querySelectorAll('input[id^="extra_"]');
     extras.forEach(inp => {
         const qtd = parseInt(inp.value);
@@ -219,42 +263,40 @@ function atualizarTotalProducao() {
         totalAdicional += pagavel * preco;
     });
     
-    // 3. Cálculo Final do Saldo Devedor
+    // Cálculo Final do Saldo
     const config = AppState.config.cliente;
     let saldoDevedor = totalAdicional;
 
     if (config.incluirAlbum) {
-        // Se tem contrato: ValorContrato + Adicionais - Entrada
+        // Contrato: (ValorContratoBase + Adicionais) - Entrada
         const valorContrato = config.contrato.valorTotal || 0;
         const entrada = config.entrada || 0;
         saldoDevedor = (valorContrato + totalAdicional) - entrada;
     } else {
-        // Se é avulso: Adicionais - Entrada
+        // Avulso: Adicionais - Entrada
         const entrada = config.entrada || 0;
         saldoDevedor = totalAdicional - entrada;
     }
 
-    if (saldoDevedor < 0) saldoDevedor = 0; // Não mostramos valor negativo
+    if (saldoDevedor < 0) saldoDevedor = 0;
 
     document.getElementById('total-prod-display').innerText = formatMoney(saldoDevedor);
-    AppState.totalFinanceiro = saldoDevedor; // Salva o valor que falta pagar
+    AppState.totalFinanceiro = saldoDevedor;
 }
 
 function finalizarProducao() {
     AppState.carrinho = [];
     const albumChoice = document.querySelector('input[name="fotolivro_choice"]:checked');
     
-    // Item Álbum no Carrinho
     if (albumChoice) {
         let desc = albumChoice.dataset.name;
         const upg = parseFloat(albumChoice.dataset.upgrade);
         if (AppState.config.cliente.incluirAlbum) {
             desc += upg > 0 ? ` (Upgrade: +${formatMoney(upg)})` : " (Incluso no Contrato)";
         }
-        AppState.carrinho.push({ item: desc, valor: upg }); // Guarda só o adicional no item, o total geral controla o resto
+        AppState.carrinho.push({ item: desc, valor: upg }); 
     }
 
-    // Item Extras
     const extras = document.querySelectorAll('input[id^="extra_"]');
     extras.forEach(inp => {
         const qtd = parseInt(inp.value);
@@ -263,8 +305,10 @@ function finalizarProducao() {
             const pagavel = Math.max(0, qtd - creditos);
             const valorTotalItem = pagavel * parseFloat(inp.dataset.price);
             let nomeItem = inp.dataset.name;
-            if (creditos > 0 && qtd <= creditos) nomeItem += " (Incluso)";
-            else if (creditos > 0) nomeItem += ` (${creditos} inclusas + ${pagavel} extras)`;
+            if (creditos > 0) {
+                if (qtd <= creditos) nomeItem += " (Incluso nos Créditos)";
+                else nomeItem += ` (${creditos} inclusas + ${pagavel} pagas)`;
+            }
             AppState.carrinho.push({ item: `${qtd}x ${nomeItem}`, valor: valorTotalItem });
         }
     });
