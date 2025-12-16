@@ -1,216 +1,335 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>NBV Admin V8.1</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="js/database.js"></script>
-    <style>
-        :root { --primary: #0066cc; --bg: #f3f4f6; --sidebar: #fff; --text: #1f2937; --border: #e5e7eb; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
-        .nav-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 5px; cursor: pointer; border: none; background: none; color: #666; font-weight: 600; display: flex; align-items: center; gap: 10px; border-radius: 6px; }
-        .nav-btn:hover, .nav-btn.active { background: #eff6ff; color: var(--primary); }
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .section { display: none; } .section.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .row { display: flex; gap: 15px; } .col { flex: 1; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-primary { background: var(--primary); } .btn-success { background: #16a34a; } .btn-github { background: #24292e; } .btn-add { background: #ecfdf5; color: #16a34a; border: 1px dashed #16a34a; }
-        .card-pres { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .table-row, .list-item { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
-        .btn-remove { background: #fee2e2; color: #dc2626; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Pedido Studio NBV</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--primary:#3b82f6;--success:#22c55e;--danger:#ef4444}
+* { box-sizing: border-box; }
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:100px}
+.container{max-width:600px;margin:0 auto;padding:20px}
+.hidden{display:none !important}
+.card{background:var(--card);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid #334155}
+.btn{background:var(--primary);color:#fff;border:none;padding:15px;width:100%;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;display:block;text-align:center;text-decoration:none;margin-top:10px}
+.btn-success{background:var(--success)}
+.btn-outline{background:transparent;border:1px solid #475569;color:#94a3b8}
+h2,h3{margin-top:0;color:#fff;text-align:center}
+img{max-width:100%;border-radius:8px}
+
+/* Workstation */
+.work-grid{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.photo-container{position:relative;background:#000;min-height:300px;display:flex;align-items:center;border-radius:8px;overflow:hidden}
+.photo-container img{width:100%;pointer-events:none}
+.opt-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px;background:#334155;border-radius:6px}
+.stepper{display:flex;gap:10px}
+.stepper button{background:#475569;border:none;color:#fff;width:30px;height:30px;border-radius:4px;cursor:pointer}
+
+/* Inputs */
+input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; }
+.alert-box { background: #334155; padding: 10px; border-radius: 6px; font-size: 13px; color: #cbd5e1; margin-top: 10px; }
+</style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2 style="margin:0 0 20px; font-size:1.4rem; color:#333"><i class="fas fa-camera"></i> Studio<span style="color:var(--primary)">NBV</span></h2>
-        <nav>
-            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> Cliente & Contrato</button>
-            <button class="nav-btn" onclick="showTab('tab-apresentacao')"><i class="fas fa-bullhorn"></i> Apresentação (Novo)</button>
-            <button class="nav-btn" onclick="showTab('tab-fotolivro')"><i class="fas fa-book"></i> Tabela Fotolivros</button>
-            <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-images"></i> Produtos Avulsos</button>
-            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> Financeiro & Log.</button>
-            <button class="nav-btn" onclick="showTab('tab-github')"><i class="fab fa-github"></i> Conexão GitHub</button>
-        </nav>
-        <div style="margin-top:auto; padding-top:15px; border-top:1px solid #eee">
-            <button class="btn btn-success" onclick="gerarGaleriaEntrega()"><i class="fas fa-images"></i> GERAR GALERIA FINAL</button>
-            <button class="btn btn-primary" onclick="gerarSiteVenda()"><i class="fas fa-file-zipper"></i> GERAR SITE VENDA</button>
-            <button class="btn btn-github" onclick="salvarNoGithub()"><i class="fas fa-cloud-upload-alt"></i> SALVAR DB</button>
-        </div>
-    </div>
+<div id="app">
+    <div style="text-align:center;padding:50px">Carregando...</div>
+</div>
 
-    <div class="main-content">
-        <div id="tab-cliente" class="section active">
-            <h2>Dados do Cliente</h2>
-            <div class="form-group"><label>Nome</label><input type="text" id="cliName" placeholder="Ex: Maria e João"></div>
-            <div class="form-group"><label>Links Fotos</label><textarea id="cliFotos" rows="6"></textarea></div>
-            
-            <h4>Contrato Financeiro</h4>
-            <div class="row">
-                <div class="col"><div class="form-group"><label>Entrada Paga (R$)</label><input type="number" id="cliEntrada" value="0.00"></div></div>
-                <div class="col"><div class="form-group"><label>Valor TOTAL Contrato (R$)</label><input type="number" id="ctrValorTotal" placeholder="2000.00"></div></div>
-            </div>
-            
-            <div style="background:#e0f2fe; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #bae6fd">
-                <h5 style="margin:0 0 10px; color:var(--primary)">Base para Upgrade</h5>
-                <div class="row">
-                    <div class="col"><label>Tamanho Base</label><select id="ctrSize"><option value="15x20">15x20</option><option value="20x30">20x30</option><option value="30x40">30x40</option></select></div>
-                    <div class="col"><label>Qtd. Fotos Base</label><input type="number" id="ctrQtdFotos" value="20"></div>
+<script src="js/database.js"></script>
+<script src="config_cliente.js"></script>
+
+<script>
+const App = {
+    data: {},
+    state: { view: 'intro', idx: 0, mode: 'avulso', sel: [], pag: 'pix', frete: 'sede' },
+
+    init() {
+        if(!window.NBV_CONFIG) return document.getElementById('app').innerHTML = "Erro: Config não encontrada.";
+        // Mescla
+        this.data = { ...window.NBV_DB, ...window.NBV_CONFIG };
+        this.data.financeiro = { ...window.NBV_DB.financeiro, ...window.NBV_CONFIG.financeiro };
+        
+        // Init Selection
+        this.state.sel = this.data.fotos.map(url => ({ inAlbum: false, extras: {} }));
+        
+        // 1. Verifica Edição
+        if (this.data.fluxo.pedirEdicao) {
+            this.state.view = 'intro';
+        } else {
+            // Se pular edição, vai para apresentação ou modo
+            this.state.view = 'apresentacao';
+        }
+        
+        this.render();
+    },
+
+    render() {
+        const app = document.getElementById('app');
+        const view = this.state.view;
+        let html = '';
+
+        if(view === 'intro') {
+            html = `
+            <div class="container">
+                <h2>Olá, ${this.data.cliente.nome}!</h2>
+                <div class="card"><p>Antes de produzir, precisamos saber sobre a edição:</p></div>
+                <div class="card">
+                    <h3>✨ Opção 1: Com Edição</h3>
+                    <p style="color:#94a3b8;font-size:14px;text-align:center">Tratamento artístico. Prazo: 30 dias.</p>
+                    <button class="btn" onclick="App.escolherEdicao(true)">Quero com Edição</button>
                 </div>
-            </div>
-            <div class="form-group"><label>Créditos Extras</label><div id="creditos-list"></div><button class="btn btn-add" onclick="addCreditoRow()">+ Item Incluso</button></div>
-        </div>
-
-        <div id="tab-apresentacao" class="section">
-            <h2>Página de Apresentação</h2>
-            <p style="color:#666; font-size:0.9rem">Configure o texto que vende o seu peixe antes da seleção.</p>
-            <div class="card-pres">
-                <h5>📚 Fotolivro</h5>
-                <div class="form-group"><label>Texto Venda</label><textarea id="txtBook" rows="2">Eternize momentos em capa dura e alta resolução.</textarea></div>
-                <div class="form-group"><label>URL Imagem</label><input type="text" id="imgBook" value="https://placehold.co/600x400?text=Fotolivro"></div>
-            </div>
-            <div class="card-pres">
-                <h5>🖼️ Revelações</h5>
-                <div class="form-group"><label>Texto Venda</label><textarea id="txtPrint" rows="2">Qualidade Fujifilm com durabilidade de 100 anos.</textarea></div>
-                <div class="form-group"><label>URL Imagem</label><input type="text" id="imgPrint" value="https://placehold.co/600x400?text=Revelacao"></div>
-            </div>
-        </div>
-
-        <div id="tab-fotolivro" class="section">
-            <h2>Tabela Fotolivros</h2>
-            <div class="row"><div class="col"><label>Markup</label><input type="number" id="markup"></div><div class="col"><label>Custo Fixo</label><input type="number" id="custoFixo"></div><div class="col"><label>Mínimo Fotos</label><input type="number" id="minFotosLivro"></div></div>
-            <div id="fotolivro-table"></div><button class="btn btn-add" onclick="addBookRow()">+ Linha</button>
-            <h4 style="margin-top:20px">Regras (Fotos/Pág)</h4><div id="regras-container"></div>
-        </div>
-        <div id="tab-produtos" class="section"><h3>Produtos Avulsos</h3><div id="produtos-list"></div><button class="btn btn-add" onclick="addProdRow()">+ Produto</button></div>
-        <div id="tab-financeiro" class="section">
-            <h2>Financeiro & Logística</h2>
-            <div class="row"><div class="col"><label>Desc. Pix %</label><input type="number" id="pixDesc"></div><div class="col"><label>Juros</label><input type="text" id="ratesTable"></div></div>
-            <div class="form-group"><label>Whatsapp</label><input type="text" id="whatsNum"></div>
-            <div class="form-group"><label>Cidades Frete Grátis</label><input type="text" id="freeCities"></div>
-            <div class="form-group"><label>Endereço Sede</label><input type="text" id="sedeAddress"></div>
-            <div class="form-group"><label>Frete Transp. (R$)</label><input type="number" id="shipPrice"></div>
-        </div>
-        <div id="tab-github" class="section"><h3>GitHub</h3><div class="form-group"><label>Token</label><input type="password" id="ghToken"></div><div class="form-group"><label>User</label><input type="text" id="ghUser"></div><div class="form-group"><label>Repo</label><input type="text" id="ghRepo"></div><button class="btn btn-primary" onclick="salvarCredenciaisLocal()">Salvar</button></div>
-    </div>
-
-    <script>
-        window.onload = function() { carregarCredenciaisLocal(); if(window.NBV_DB) carregarDB(window.NBV_DB); else alert("Use Live Server!"); };
-
-        function carregarDB(db) {
-            const s = { markup:'financeiro.markup', custoFixo:'financeiro.custoFixoDiagramacao', pixDesc:'financeiro.descontoPix', shipPrice:'logistica.taxaEnvio', minFotosLivro:'fluxo.minimoFotosLivro', whatsNum:'financeiro.whatsapp', sedeAddress:'logistica.enderecoSede' };
-            for(let id in s) try { document.getElementById(id).value = eval('db.'+s[id]); } catch(e){}
-            document.getElementById('ratesTable').value = db.financeiro.tabelaJuros.join(', ');
-            document.getElementById('freeCities').value = db.logistica.cidadesGratis.join(', ');
+                <div class="card">
+                    <h3>⚡ Opção 2: Produção Rápida</h3>
+                    <p style="color:#94a3b8;font-size:14px;text-align:center">Fotos originais. Prazo: 10 dias.</p>
+                    <button class="btn btn-outline" onclick="App.escolherEdicao(false)">Sem Edição</button>
+                </div>
+            </div>`;
+        }
+        else if(view === 'apresentacao') {
+            const pres = this.data.apresentacao || {};
+            html = `
+            <div class="container">
+                <h2>Conheça nossos Produtos</h2>
+                <div class="card">
+                    <img src="${pres.book?.img || ''}" style="height:200px;object-fit:cover;width:100%">
+                    <h3>📚 Fotolivros</h3>
+                    <p>${pres.book?.text || ''}</p>
+                </div>
+                <div class="card">
+                    <img src="${pres.print?.img || ''}" style="height:200px;object-fit:cover;width:100%">
+                    <h3>🖼️ Revelações</h3>
+                    <p>${pres.print?.text || ''}</p>
+                </div>
+                <button class="btn" onclick="App.irParaModo()">Entendi, quero escolher!</button>
+            </div>`;
+        }
+        else if(view === 'modo') {
+            // Lógica: Só mostra álbum se tiver > 20 fotos E o contrato permitir (ou for avulso, assumimos que pode)
+            const temMinimo = this.data.fotos.length >= (this.data.fluxo.minimoFotosLivro || 20);
+            const permiteContrato = this.data.cliente.incluirAlbum; // Se for 'sim', é contrato. Se 'nao', é avulso.
             
-            if(db.apresentacao) {
-                document.getElementById('txtBook').value = db.apresentacao.book.text;
-                document.getElementById('imgBook').value = db.apresentacao.book.img;
-                document.getElementById('txtPrint').value = db.apresentacao.print.text;
-                document.getElementById('imgPrint').value = db.apresentacao.print.img;
+            html = `<div class="container"><h2>Como deseja produzir?</h2>`;
+            
+            // Se tiver mínimo de fotos, libera opção álbum
+            if(temMinimo) {
+                html += `
+                <div class="card">
+                    <h3>📚 Fazer Fotolivro</h3>
+                    <p style="color:#94a3b8;text-align:center">Montaremos um álbum lindo.</p>
+                    <button class="btn" onclick="App.setMode('album')">Montar Álbum</button>
+                </div>`;
             }
-
-            const tbL=document.getElementById('fotolivro-table'); tbL.innerHTML=''; db.tabelaFotolivros.forEach(i=>addBookRow(i));
-            const tbP=document.getElementById('produtos-list'); tbP.innerHTML=''; db.produtosAvulsos.forEach(i=>addProdRow(i));
-            const reg=document.getElementById('regras-container'); reg.innerHTML='';
-            for(let k in db.regrasDiagramacao) reg.innerHTML += `<div class="list-item"><b style="width:60px">${k}</b> <input type="number" class="regra-input" data-size="${k}" value="${db.regrasDiagramacao[k]}" style="width:60px">/pág</div>`;
+            html += `
+                <div class="card">
+                    <h3>🖼️ Apenas Revelações</h3>
+                    <p style="color:#94a3b8;text-align:center">Fotos avulsas, quadros ou arquivos.</p>
+                    <button class="btn btn-outline" onclick="App.setMode('avulso')">Revelações Avulsas</button>
+                </div></div>`;
         }
-
-        function montarConfig() {
-            const livros = []; document.querySelectorAll('.book-row').forEach(r => livros.push({ size: r.querySelector('.bk-size').value, pages: Number(r.querySelector('.bk-pages').value), price: Number(r.querySelector('.bk-price').value), priceBox: Number(r.querySelector('.bk-box').value) }));
-            const prods = []; document.querySelectorAll('.prod-row').forEach(r => prods.push({ nome: r.querySelector('.pd-name').value, preco: Number(r.querySelector('.pd-price').value), icone: r.querySelector('.pd-icon').value }));
-            const regras = {}; document.querySelectorAll('.regra-input').forEach(i => regras[i.dataset.size] = Number(i.value));
-            const creds = []; document.querySelectorAll('.credito-row').forEach(r => creds.push({ item: r.querySelector('.cred-name').value, qtd: Number(r.querySelector('.cred-qtd').value) }));
-
-            return {
-                cliente: {
-                    nome: document.getElementById('cliName').value,
-                    entrada: Number(document.getElementById('cliEntrada').value),
-                    contrato: { 
-                        valorTotal: Number(document.getElementById('ctrValorTotal').value),
-                        tamanho: document.getElementById('ctrSize').value,
-                        qtdFotos: Number(document.getElementById('ctrQtdFotos').value)
-                    },
-                    creditos: creds
-                },
-                apresentacao: {
-                    book: { text: document.getElementById('txtBook').value, img: document.getElementById('imgBook').value },
-                    print: { text: document.getElementById('txtPrint').value, img: document.getElementById('imgPrint').value }
-                },
-                fotos: document.getElementById('cliFotos').value.split('\n').filter(x=>x.trim()),
-                financeiro: {
-                    markup: Number(document.getElementById('markup').value),
-                    custoFixo: Number(document.getElementById('custoFixo').value),
-                    descontoPix: Number(document.getElementById('pixDesc').value),
-                    tabelaJuros: document.getElementById('ratesTable').value.split(',').map(Number),
-                    whatsapp: document.getElementById('whatsNum').value
-                },
-                logistica: {
-                    taxaEnvio: Number(document.getElementById('shipPrice').value),
-                    cidadesGratis: document.getElementById('freeCities').value.split(',').map(s => s.trim()),
-                    enderecoSede: document.getElementById('sedeAddress').value
-                },
-                fluxo: { minFotosLivro: Number(document.getElementById('minFotosLivro').value) },
-                tabelaFotolivros: livros, regrasDiagramacao: regras, produtosAvulsos: prods
-            };
-        }
-
-        // --- GERA O SITE DE VENDA (Lê index.html da pasta e injeta dados) ---
-        async function gerarSiteVenda() {
-            const config = montarConfig();
-            if(!config.cliente.nome) return alert("Preencha o Cliente!");
-            const zip = new JSZip();
+        else if(view === 'workstation') {
+            const foto = this.data.fotos[this.state.idx];
+            const sel = this.state.sel[this.state.idx];
             
-            // 1. Gera o config.js
-            zip.file("config_cliente.js", `window.NBV_CONFIG = ${JSON.stringify(config, null, 4)};`);
-            
-            // 2. Tenta pegar os arquivos locais
-            const files = ['index.html', 'js/database.js']; // Só precisamos do index e database, a lógica ta no index agora
-            try {
-                for(let f of files) {
-                    const resp = await fetch(f);
-                    if(!resp.ok) throw new Error("Arquivo " + f + " não encontrado na pasta.");
-                    zip.file(f, await resp.text());
-                }
-                // Adiciona Galeria também
-                zip.file("galeria.html", criarHtmlGaleria(config.cliente.nome, config.fotos));
+            html = `
+            <div class="container">
+                <div class="work-grid">
+                    <button class="btn-outline" onclick="App.nav(-1)" style="width:auto">❮</button>
+                    <span>${this.state.idx + 1} / ${this.data.fotos.length}</span>
+                    <button class="btn-outline" onclick="App.nav(1)" style="width:auto">❯</button>
+                </div>
                 
-                const content = await zip.generateAsync({type:"blob"});
-                saveAs(content, `Pedido_${config.cliente.nome.replace(/\s+/g,'_')}.zip`);
-            } catch(e) { alert("Erro ao gerar ZIP: " + e.message); }
+                <div class="photo-container">
+                    <img src="${foto}">
+                </div>
+
+                ${this.state.mode === 'album' ? `
+                <div class="opt-row" style="background:${sel.inAlbum?'#22c55e':'#334155'};cursor:pointer" onclick="App.toggleAlbum()">
+                    <strong>📚 Incluir no Álbum</strong>
+                    <span>${sel.inAlbum ? 'SIM' : 'NÃO'}</span>
+                </div>` : ''}
+
+                <div class="card" style="margin-top:10px">
+                    <h4 style="margin:0 0 10px 0;color:#94a3b8">Adicionar Produtos nesta foto:</h4>
+                    ${this.renderProdList(sel)}
+                </div>
+
+                <button class="btn btn-success" onclick="App.checkout()">Finalizar Pedido ➔</button>
+            </div>`;
+        }
+        else if(view === 'checkout') {
+            const resumo = this.calcularTotal();
+            html = `
+            <div class="container">
+                <h2>Resumo do Pedido</h2>
+                <div class="card" style="font-family:monospace;font-size:13px;white-space:pre-wrap">${resumo.texto}</div>
+                
+                <div class="card">
+                    <h3>🚚 Entrega</h3>
+                    <select id="frete" onchange="App.setFrete(this.value)">
+                        <option value="sede" ${this.state.frete=='sede'?'selected':''}>Retirar na Sede</option>
+                        <option value="gratis" ${this.state.frete=='gratis'?'selected':''}>Frete Grátis (${this.data.logistica.cidadesGratis.join(', ')})</option>
+                        <option value="transp" ${this.state.frete=='transp'?'selected':''}>Transportadora (+ R$ ${this.data.logistica.taxaEnvio})</option>
+                    </select>
+                    ${this.state.frete !== 'sede' ? `<input type="text" id="endereco" placeholder="Endereço de Entrega / Local de Retirada na Cidade">` : ''}
+                </div>
+
+                <div class="card">
+                    <h3>💳 Pagamento</h3>
+                    <div style="display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px;font-weight:bold;color:#22c55e">
+                        <span>Total Final:</span>
+                        <span>R$ ${resumo.total.toFixed(2)}</span>
+                    </div>
+                    <select id="pag" onchange="App.setPag(this.value)">
+                        <option value="pix" ${this.state.pag=='pix'?'selected':''}>Pix (5% Desconto)</option>
+                        <option value="cartao" ${this.state.pag=='cartao'?'selected':''}>Cartão de Crédito</option>
+                        <option value="boleto" ${this.state.pag=='boleto'?'selected':''}>Boleto (até 6x)</option>
+                    </select>
+
+                    ${this.state.pag === 'boleto' ? `
+                    <div class="alert-box">
+                        <label>Nome Completo</label><input type="text" id="bol_nome">
+                        <label>CPF</label><input type="text" id="bol_cpf">
+                        <label>Vencimento</label><input type="date" id="bol_data">
+                    </div>` : ''}
+                </div>
+
+                <button class="btn btn-success" onclick="App.enviarZap()">Enviar Pedido no WhatsApp</button>
+                <button class="btn btn-outline" onclick="App.setMode(App.state.mode)">Voltar e Editar</button>
+            </div>`;
         }
 
-        function criarHtmlGaleria(nome, fotos) {
-            const fotosJson = JSON.stringify(fotos);
-            return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Galeria - ${nome}</title><style>body{font-family:sans-serif;background:#eee;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}img{width:100%;border-radius:5px}.btn{display:block;width:100%;padding:10px;background:#333;color:#fff;text-align:center;text-decoration:none;margin-top:5px}</style></head><body><h1>Galeria: ${nome}</h1><div class="grid">${fotos.map(f=>`<div><img src="${f}"><a href="${f}" download class="btn">Baixar</a></div>`).join('')}</div></body></html>`;
+        app.innerHTML = html;
+    },
+
+    // AÇÕES
+    escolherEdicao(quer) {
+        if(quer) {
+            const link = `https://wa.me/${this.data.financeiro.whatsapp}?text=Ola, gostaria de solicitar Edicao Artistica nas fotos (Prazo 30 dias).`;
+            window.location.href = link;
+        } else {
+            this.state.view = 'apresentacao';
+            this.render();
+        }
+    },
+    irParaModo() {
+        if(this.data.fotos.length < 20) this.setMode('avulso');
+        else { this.state.view = 'modo'; this.render(); }
+    },
+    setMode(m) { this.state.mode = m; this.state.view = 'workstation'; this.render(); },
+    nav(d) { this.state.idx = (this.state.idx + d + this.data.fotos.length) % this.data.fotos.length; this.render(); },
+    toggleAlbum() { this.state.sel[this.state.idx].inAlbum = !this.state.sel[this.state.idx].inAlbum; this.render(); },
+    
+    renderProdList(sel) {
+        return this.data.produtosAvulsos.map(p => {
+            const qtd = sel.extras[p.nome] || 0;
+            return `<div class="opt-row">
+                <span>${p.nome} (R$ ${p.preco})</span>
+                <div class="stepper">
+                    <button onclick="App.addProd('${p.nome}', -1)">-</button>
+                    <span>${qtd}</span>
+                    <button onclick="App.addProd('${p.nome}', 1)">+</button>
+                </div>
+            </div>`;
+        }).join('');
+    },
+    addProd(nome, d) {
+        const curr = this.state.sel[this.state.idx].extras[nome] || 0;
+        const novo = Math.max(0, curr + d);
+        if(novo === 0) delete this.state.sel[this.state.idx].extras[nome];
+        else this.state.sel[this.state.idx].extras[nome] = novo;
+        this.render();
+    },
+    
+    checkout() { this.state.view = 'checkout'; this.render(); },
+    setFrete(v) { this.state.frete = v; this.render(); },
+    setPag(v) { this.state.pag = v; this.render(); },
+
+    calcularTotal() {
+        let total = 0;
+        let texto = "";
+        
+        // 1. Fotolivro
+        if(this.state.mode === 'album') {
+            const qtd = this.state.sel.filter(s=>s.inAlbum).length;
+            const ctr = this.data.cliente.contrato || {};
+            const contratadas = ctr.qtdFotos || 0;
+            let valorAlbum = 0;
+            
+            if(qtd > 0) {
+                texto += `📚 Fotolivro: ${qtd} fotos\n`;
+                if(qtd > contratadas) {
+                    const extra = qtd - contratadas;
+                    const custoExtra = extra * 25; // Exemplo de custo fixo por enquanto
+                    valorAlbum += custoExtra;
+                    texto += `   + ${extra} fotos extras: R$ ${custoExtra.toFixed(2)}\n`;
+                } else {
+                    texto += `   (Coberto pelo Contrato)\n`;
+                }
+                
+                // Se o cliente marcou que TEM CONTRATO, somamos o valor base
+                if(this.data.cliente.incluirAlbum && ctr.valorTotal > 0) {
+                    texto += `📄 Contrato Base: R$ ${ctr.valorTotal.toFixed(2)}\n`;
+                    valorAlbum += ctr.valorTotal;
+                }
+                total += valorAlbum;
+            }
         }
 
-        // --- GERA GALERIA FINAL (Separado) ---
-        function gerarGaleriaEntrega() {
-            const config = montarConfig();
-            const blob = new Blob([criarHtmlGaleria(config.cliente.nome, config.fotos)], {type:"text/html;charset=utf-8"});
-            saveAs(blob, `Galeria_${config.cliente.nome}.html`);
+        // 2. Avulsos
+        this.state.sel.forEach(s => {
+            Object.keys(s.extras).forEach(k => {
+                const p = this.data.produtosAvulsos.find(x=>x.nome===k);
+                const sub = p.preco * s.extras[k];
+                total += sub;
+                texto += `🖼️ ${s.extras[k]}x ${k}: R$ ${sub.toFixed(2)}\n`;
+            });
+        });
+
+        // 3. Frete
+        if(this.state.frete === 'transp') {
+            total += this.data.logistica.taxaEnvio;
+            texto += `🚚 Frete: R$ ${this.data.logistica.taxaEnvio.toFixed(2)}\n`;
         }
 
-        // UI Helpers
-        function showTab(id) { document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active'); }
-        function addBookRow(d={}) { document.getElementById('fotolivro-table').insertAdjacentHTML('beforeend', `<div class="table-row book-row"><select class="bk-size"><option value="15x20" ${d.size=='15x20'?'selected':''}>15x20</option><option value="20x30" ${d.size=='20x30'?'selected':''}>20x30</option><option value="30x40" ${d.size=='30x40'?'selected':''}>30x40</option></select><input type="number" class="bk-pages" value="${d.pages||''}" placeholder="Págs"><input type="number" class="bk-price" value="${d.price||''}" placeholder="Base"><input type="number" class="bk-box" value="${d.priceBox||''}" placeholder="Caixa"><button class="btn-remove" onclick="this.parentElement.remove()">X</button></div>`); }
-        function addProdRow(d={}) { document.getElementById('produtos-list').insertAdjacentHTML('beforeend', `<div class="list-item prod-row"><input type="text" class="pd-name" value="${d.nome||''}" placeholder="Nome" style="flex:2"><input type="number" class="pd-price" value="${d.preco||''}" placeholder="R$" style="flex:1"><input type="text" class="pd-icon" value="${d.icone||'fas fa-image'}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">X</button></div>`); }
-        function addCreditoRow(d={}) {
-            let opts = '<option value="">-- Item --</option>'; document.querySelectorAll('.prod-row .pd-name').forEach(i => { if(i.value) opts += `<option value="${i.value}" ${d.item==i.value?'selected':''}>${i.value}</option>`; });
-            document.getElementById('creditos-list').insertAdjacentHTML('beforeend', `<div class="list-item credito-row"><select class="cred-name" style="flex:2">${opts}</select><input type="number" class="cred-qtd" value="${d.qtd||1}" style="width:60px"><button class="btn-remove" onclick="this.parentElement.remove()">X</button></div>`);
+        // 4. Entrada (Desconto)
+        const entrada = this.data.cliente.entrada || 0;
+        if(entrada > 0) {
+            total -= entrada;
+            texto += `💰 Entrada Paga (Abatimento): - R$ ${entrada.toFixed(2)}\n`;
         }
-        function salvarCredenciaisLocal() { localStorage.setItem('ghToken', document.getElementById('ghToken').value); localStorage.setItem('ghUser', document.getElementById('ghUser').value); localStorage.setItem('ghRepo', document.getElementById('ghRepo').value); alert('Salvo!'); }
-        function carregarCredenciaisLocal() { if(localStorage.getItem('ghToken')) document.getElementById('ghToken').value = localStorage.getItem('ghToken'); if(localStorage.getItem('ghUser')) document.getElementById('ghUser').value = localStorage.getItem('ghUser'); if(localStorage.getItem('ghRepo')) document.getElementById('ghRepo').value = localStorage.getItem('ghRepo'); }
-        async function salvarNoGithub() { alert("Use o GERAR SITE VENDA para atualizar o cliente."); }
-    </script>
+        
+        if(total < 0) total = 0;
+        return { total, texto };
+    },
+
+    enviarZap() {
+        const calc = this.calcularTotal();
+        let msg = `*PEDIDO - ${this.data.cliente.nome}*\n\n${calc.texto}\n`;
+        msg += `-------------------\n*TOTAL FINAL: R$ ${calc.total.toFixed(2)}*\n`;
+        msg += `Pagamento: ${this.state.pag.toUpperCase()}\n`;
+        
+        if(this.state.pag === 'boleto') {
+            const nome = document.getElementById('bol_nome').value;
+            const cpf = document.getElementById('bol_cpf').value;
+            const data = document.getElementById('bol_data').value;
+            if(!nome || !cpf) return alert("Preencha Nome e CPF para o Boleto.");
+            msg += `Dados Boleto: ${nome}, CPF ${cpf}, Venc ${data}\n`;
+        }
+
+        if(this.state.frete !== 'sede') {
+            const end = document.getElementById('endereco') ? document.getElementById('endereco').value : 'Frete Grátis na Cidade';
+            msg += `📍 Entrega: ${end}\n`;
+        } else {
+            msg += `📍 Retirada na Sede\n`;
+        }
+
+        window.open(`https://wa.me/${this.data.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`);
+    }
+};
+
+window.onload = () => App.init();
+</script>
 </body>
 </html>
