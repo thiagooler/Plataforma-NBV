@@ -1,511 +1,518 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Pedido Studio NBV</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-/* TEMA CLARO (LIGHT MODE) */
-:root{
-    --bg:#f8f9fa; --card:#ffffff; --text:#1f2937; --text-light:#6b7280;
-    --primary:#0066cc; --primary-dark:#004c99; --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
-    --border:#e5e7eb;
-}
-* { box-sizing: border-box; }
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:100px}
-.container{max-width:600px;margin:0 auto;padding:20px}
-.hidden{display:none !important}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio NBV - Seleção de Fotos</title>
+    <style>
+        :root {
+            --primary-color: #007bff; /* Azul padrão */
+            --primary-hover: #0056b3;
+            --success-color: #28a745;
+            --text-color: #333;
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+        }
 
-/* CARDS & LAYOUT */
-.card{background:var(--card);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid var(--border);box-shadow:0 2px 4px rgba(0,0,0,0.02)}
-h2{margin-top:0;color:var(--primary-dark);text-align:center;font-size:1.5rem}
-h3{margin:0 0 10px 0;font-size:1.1rem;color:var(--text)}
-p{color:var(--text-light);line-height:1.5;margin-bottom:15px}
-img{max-width:100%;border-radius:8px}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
 
-/* BOTÕES */
-.btn{background:var(--primary);color:#fff;border:none;padding:15px;width:100%;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:10px;transition:0.2s}
-.btn:active{transform:scale(0.98)}
-.btn-success{background:var(--success)}
-.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text-light)}
-.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        header {
+            background-color: #222;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
 
-/* WORKSTATION */
-.work-grid{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.photo-container{position:relative;background:#eee;min-height:300px;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-.photo-container img{width:100%;pointer-events:none;user-select:none}
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
 
-/* MARCA D'ÁGUA */
-.watermark-overlay {
-    position: absolute; top:0; left:0; width:100%; height:100%;
-    background-repeat: repeat; background-position: center; pointer-events: none; z-index: 10;
-}
+        /* MENU PRINCIPAL */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
 
-/* LISTA DE PRODUTOS */
-.prod-item{padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.prod-item:last-child{border-bottom:none}
-.prod-info{font-size:14px;font-weight:500}
-.prod-price{font-size:12px;color:var(--text-light)}
-.stepper{display:flex;gap:5px;align-items:center}
-.stepper button{background:var(--border);border:none;color:var(--text);width:32px;height:32px;border-radius:6px;font-weight:bold;cursor:pointer}
-.stepper span{width:25px;text-align:center;font-weight:bold}
-.brinde-tag{background:var(--success);color:white;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:5px}
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
 
-/* MODAL & ALERTS */
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal-box{background:white;padding:25px;border-radius:12px;max-width:400px;text-align:center}
-.modal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-height:60vh;overflow-y:auto}
-.thumb-box{position:relative;aspect-ratio:1;overflow:hidden;border-radius:4px}
-.thumb-box img{width:100%;height:100%;object-fit:cover}
+        .card:hover {
+            transform: translateY(-5px);
+        }
 
-/* Inputs */
-input, select { width: 100%; padding: 12px; margin-top: 5px; background: #fff; border: 1px solid var(--border); color: var(--text); border-radius: 6px; }
-</style>
+        h2 { margin-top: 0; }
+        p { color: #666; }
+
+        /* BOTÕES */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* SEÇÕES (Escondidas por padrão) */
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* GALERIA (ESPIAR) */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .gallery-item {
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        /* Marca d'água simulada via CSS (para demo) */
+        .watermark-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-weight: bold;
+            font-size: 1.2rem;
+            transform: rotate(-30deg);
+            pointer-events: none;
+            background: rgba(0,0,0,0.1);
+        }
+
+        /* MODAL DE ESPIAR (Lightbox) */
+        #lightbox {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border: 2px solid #fff;
+        }
+        #lightbox .close-btn {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+        }
+
+        /* CONTROLES DE SELEÇÃO */
+        .photo-viewer {
+            text-align: center;
+        }
+        .photo-viewer img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        /* TELA DE PERSUASÃO (UPSELL) */
+        .persuasion-box {
+            background: #eef7ff;
+            border: 2px solid var(--primary-color);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .persuasion-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .persuasion-list {
+            text-align: left;
+            margin: 20px 0;
+            list-style: none;
+            padding: 0;
+        }
+        .persuasion-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .btn-persuasion-main {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1.2rem;
+            padding: 15px;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+        .btn-persuasion-weak {
+            background-color: #ddd;
+            color: #555;
+            font-size: 0.9rem;
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* RESUMO */
+        .summary-box {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+    </style>
 </head>
 <body>
 
-<div id="app">
-    <div style="text-align:center;padding:50px;color:#666"><i class="fas fa-spinner fa-spin"></i> Carregando Sistema...</div>
+<header>
+    <h1>Studio NBV</h1>
+    <p>Área do Cliente</p>
+</header>
+
+<div class="container">
+
+    <div id="main-menu" class="section active">
+        <div class="menu-grid">
+            
+            <div class="card">
+                <h2>📸 Espiar as Fotos</h2>
+                <p>Dê uma olhada rápida em todas as fotos do ensaio.</p>
+                <button class="btn btn-primary" onclick="showGallery()">Ver Galeria</button>
+            </div>
+
+            <div class="card">
+                <h2>📚 Como deseja produzir?</h2>
+                <p>Eternize momentos em um Fotolivro Premium.</p>
+                <h3 style="color: var(--primary-color);">R$ 1.200,00</h3>
+                <p style="font-size: 0.9rem; font-weight: bold;">ou 12x de R$ 100,00 sem juros</p>
+                <button class="btn btn-primary" onclick="startSelection('fotolivro')">Montar Fotolivro</button>
+            </div>
+
+            <div class="card">
+                <h2>🖼️ Fazer Revelação</h2>
+                <p>Escolha suas fotos favoritas para imprimir avulso.</p>
+                <button class="btn btn-primary" onclick="startSelection('revelacao')">Selecionar para Revelação</button>
+            </div>
+
+            <div class="card">
+                <h2>💾 Desejo Somente em Arquivo</h2>
+                <p>Receba as fotos em alta resolução via download.</p>
+                <button class="btn btn-primary" onclick="goToPersuasion()">Comprar Arquivos</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="gallery-section" class="section">
+        <button class="btn btn-secondary" onclick="goBack()" style="margin-bottom: 20px; width: auto;">← Voltar</button>
+        <h2>Galeria Completa</h2>
+        <div class="gallery-grid" id="gallery-grid">
+            </div>
+    </div>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <span class="close-btn">&times;</span>
+        <img id="lightbox-img" src="">
+    </div>
+
+    <div id="persuasion-section" class="section">
+        <div class="persuasion-box">
+            <h2 class="persuasion-title">⚠️ Espere um pouco, Warrior!</h2>
+            <p>Arquivos digitais se perdem no HD ou na nuvem. Você tem certeza que não quer ter essas memórias em mãos?</p>
+            
+            <ul class="persuasion-list">
+                <li>✅ <strong>Durabilidade:</strong> Papel fotográfico profissional dura gerações.</li>
+                <li>✅ <strong>Cores Reais:</strong> Nossas impressoras são calibradas (telas de celular mentem a cor).</li>
+                <li>✅ <strong>Decoração:</strong> Sua casa merece essas fotos expostas, não escondidas numa pasta.</li>
+            </ul>
+
+            <button class="btn btn-persuasion-main" onclick="startSelection('revelacao')">
+                ✨ Quero Fazer Revelação (Melhor Escolha)
+            </button>
+            <br>
+            <button class="btn btn-persuasion-weak" onclick="finishDigitalOrder()">
+                Ainda prefiro somente os arquivos
+            </button>
+        </div>
+        <br>
+        <button class="btn btn-secondary" onclick="goBack()" style="width: auto;">Cancelar</button>
+    </div>
+
+    <div id="selection-section" class="section">
+        <button class="btn btn-secondary" onclick="goBack()" style="width: auto; margin-bottom: 10px;">← Cancelar</button>
+        
+        <div class="card photo-viewer">
+            <h3 id="mode-title">Modo de Seleção</h3>
+            <p id="counter">Foto 1 de 10</p>
+            
+            <div style="position: relative; display: inline-block;">
+                <img id="current-photo" src="" alt="Foto atual">
+                <div class="watermark-overlay">Studio NBV - Prova</div>
+            </div>
+
+            <div id="controls-area">
+                <label><input type="checkbox" id="select-photo-check"> Selecionar esta foto</label>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="btn-prev" onclick="prevPhoto()" style="width: 45%;">Anterior</button>
+                <button class="btn btn-primary" id="btn-next" onclick="nextPhoto()" style="width: 45%;">Próxima Foto</button>
+                <button class="btn btn-success" id="btn-finish" onclick="finishSelection()" style="width: 45%; display: none; background-color: var(--success-color);">Finalizar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="summary-section" class="section">
+        <div class="card">
+            <h2 style="color: var(--success-color);">Pedido Realizado!</h2>
+            <div id="summary-content" class="summary-box">
+                </div>
+            <p>Entraremos em contato para finalizar o pagamento e a entrega.</p>
+            <button class="btn btn-primary" onclick="alert('Enviando para WhatsApp...')">Enviar Pedido no WhatsApp</button>
+            <button class="btn btn-secondary" onclick="location.reload()">Voltar ao Início</button>
+        </div>
+    </div>
+
 </div>
 
-<script src="js/database.js"></script>
-<script src="config_cliente.js"></script>
-
 <script>
-const App = {
-    data: {},
-    state: { view: 'intro', idx: 0, mode: 'avulso', sel: [], pag: 'pix', frete: 'sede', modalOpen: false },
+    // DADOS MOCKADOS (Simulando fotos)
+    const photos = [
+        { id: 1, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+01" },
+        { id: 2, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+02" },
+        { id: 3, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+03" },
+        { id: 4, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+04" },
+        { id: 5, src: "https://via.placeholder.com/600x400/cccccc/333333?text=Foto+05" }
+    ];
 
-    init() {
-        if(!window.NBV_CONFIG) return document.getElementById('app').innerHTML = "Erro: Config não encontrada. Gere o site novamente.";
-        
-        // Mesclagem de Dados
-        this.data = { ...window.NBV_DB, ...window.NBV_CONFIG };
-        this.data.financeiro = { ...window.NBV_DB.financeiro, ...window.NBV_CONFIG.financeiro };
-        
-        // Inicializa Seleção
-        this.state.sel = this.data.fotos.map(url => ({ inAlbum: false, isApproved: false, extras: {} }));
-        
-        // Decisão de Rota Inicial (Venda vs Aprovação)
-        if (this.data.fluxo.pedirEdicao) {
-            this.state.view = 'intro';
-        } else {
-            // Modo Aprovação Simples
-            this.state.mode = 'aprovacao_simples';
-            this.state.view = 'workstation';
-        }
-        
-        this.render();
-    },
+    let currentMode = ''; // 'fotolivro', 'revelacao', 'arquivo'
+    let selectedPhotos = new Set(); // IDs das fotos selecionadas
+    let currentIndex = 0;
 
-    // --- RENDERIZADOR PRINCIPAL ---
-    render() {
-        const app = document.getElementById('app');
-        const view = this.state.view;
-        let html = '';
+    // --- NAVEGAÇÃO ENTRE TELAS ---
 
-        // 1. TELA INTRO (EDIÇÃO)
-        if(view === 'intro') {
-            html = `
-            <div class="container">
-                <h2>Olá, ${this.data.cliente.nome}!</h2>
-                <div class="card" style="text-align:center">
-                    <p>Temos <strong>${this.data.fotos.length} fotos</strong> prontas.</p>
-                    <button class="btn btn-outline" onclick="App.toggleModalFotos()">
-                        <i class="fas fa-eye"></i> Espiar Fotos
-                    </button>
-                </div>
-                
-                <div class="card">
-                    <p style="text-align:center;font-weight:600">Deseja edição nas fotos?</p>
-                    <div class="grid-2">
-                        <button class="btn btn-outline" style="flex-direction:column; padding:20px" onclick="App.escolherEdicao(false)">
-                            <i class="fas fa-bolt" style="font-size:24px;color:var(--warning)"></i>
-                            <span>Não Preciso</span>
-                            <small style="font-size:11px;font-weight:400">Produção Rápida (10 dias)</small>
-                        </button>
-                        <button class="btn btn-outline" style="flex-direction:column; padding:20px" onclick="App.escolherEdicao(true)">
-                            <i class="fas fa-magic" style="font-size:24px;color:var(--primary)"></i>
-                            <span>Quero Edição</span>
-                            <small style="font-size:11px;font-weight:400">Tratamento Artístico (30 dias)</small>
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        // 2. APRESENTAÇÃO (EDUCATIVO)
-        else if(view === 'apresentacao') {
-            const pres = this.data.apresentacao || {};
-            html = `
-            <div class="container fade-in">
-                <h2>Conheça nossos Produtos</h2>
-                <div class="card">
-                    <img src="${pres.book?.img}" style="height:180px;object-fit:cover;width:100%">
-                    <h3 style="margin-top:15px">📚 Fotolivros</h3>
-                    <p>${pres.book?.text}</p>
-                </div>
-                <div class="card">
-                    <img src="${pres.print?.img}" style="height:180px;object-fit:cover;width:100%">
-                    <h3 style="margin-top:15px">🖼️ Revelações</h3>
-                    <p>${pres.print?.text}</p>
-                </div>
-                <button class="btn" onclick="App.irParaModo()">Entendi, quero escolher! ➔</button>
-            </div>`;
-        }
-
-        // 3. MODO DE PRODUÇÃO (FOTOLIVRO / REVELAÇÃO)
-        else if(view === 'modo') {
-            const qtdFotos = this.data.fotos.length;
-            const minFotos = this.data.fluxo.minimoFotosLivro || 20;
-            const temMinimo = qtdFotos >= minFotos;
-            
-            // Cálculo prévio do Álbum
-            let albumCard = '';
-            if(temMinimo) {
-                // Encontra a melhor opção de álbum para essa qtd
-                const opcoes = this.calcularOpcoesAlbum(qtdFotos);
-                let listaOpcoes = opcoes.map(op => `
-                    <div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-top:5px; font-size:13px; display:flex; justify-content:space-between">
-                        <span><b>${op.nome}</b></span>
-                        <span style="color:var(--primary)">12x ${formatMoney(op.parcela)}</span>
-                    </div>
-                `).join('');
-
-                albumCard = `
-                <div class="card" style="border:2px solid var(--primary)">
-                    <h3>📚 Fazer Fotolivro</h3>
-                    <p style="margin-bottom:10px">Ideal para suas ${qtdFotos} fotos.</p>
-                    ${listaOpcoes}
-                    <button class="btn" onclick="App.setMode('album')">Montar Fotolivro</button>
-                </div>`;
-            }
-
-            html = `
-            <div class="container fade-in">
-                <h2>Como deseja produzir?</h2>
-                ${albumCard}
-                
-                <div class="card">
-                    <h3>🖼️ Fazer Revelação</h3>
-                    <p>Fotos avulsas, porta-retratos e quadros.</p>
-                    <button class="btn btn-outline" onclick="App.setMode('avulso')">Escolher Revelações</button>
-                </div>
-
-                <div style="text-align:center; margin-top:20px">
-                    <a href="#" onclick="App.tentarDigitalOnly()" style="color:var(--text-light); font-size:13px; text-decoration:underline">Desejo todas somente em Arquivo</a>
-                </div>
-            </div>`;
-        }
-
-        // 4. WORKSTATION (SELEÇÃO)
-        else if(view === 'workstation') {
-            const foto = this.data.fotos[this.state.idx];
-            const sel = this.state.sel[this.state.idx];
-            
-            // Gera Marca D'água SVG
-            const wmText = this.data.assets?.watermarkText || "NBV PROIBIDO PRINT";
-            const wmOp = this.data.assets?.opacity || 0.2;
-            const svg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg width='300' height='150' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' transform='rotate(-20 150 75)' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='20' fill='%23000' fill-opacity='${wmOp}'>${wmText}</text></svg>`)}`;
-
-            html = `
-            <div class="container">
-                <div class="work-grid">
-                    <button class="btn-outline" onclick="App.nav(-1)" style="width:auto">❮</button>
-                    <span style="font-weight:bold">${this.state.idx + 1} / ${this.data.fotos.length}</span>
-                    <button class="btn-outline" onclick="App.nav(1)" style="width:auto">❯</button>
-                </div>
-                
-                <div class="photo-container">
-                    <img src="${foto}" oncontextmenu="return false;">
-                    <div class="watermark-overlay" style="background-image: url('${svg}')"></div>
-                </div>
-
-                ${this.state.mode === 'album' ? `
-                <div class="card" style="margin-top:15px; padding:15px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; border:2px solid ${sel.inAlbum?'var(--success)':'var(--border)'}" onclick="App.toggleAlbum()">
-                    <strong>📚 Incluir no Álbum</strong>
-                    <i class="fas ${sel.inAlbum?'fa-check-circle':'fa-circle'}" style="font-size:24px; color:${sel.inAlbum?'var(--success)':'#ccc'}"></i>
-                </div>` : ''}
-
-                <div class="card" style="margin-top:15px">
-                    <h3 style="font-size:1rem; color:var(--text-light)">Fazer Revelação desta foto:</h3>
-                    ${this.renderSmartProductList(sel)}
-                </div>
-
-                <button class="btn btn-success" onclick="App.checkout()">Finalizar Pedido ➔</button>
-            </div>`;
-        }
-
-        // 5. CHECKOUT
-        else if(view === 'checkout') {
-            const resumo = this.calcularTotal();
-            html = `
-            <div class="container">
-                <h2>Resumo do Pedido</h2>
-                <div class="card" style="font-family:monospace;font-size:13px;white-space:pre-wrap;background:#f1f5f9">${resumo.texto}</div>
-                
-                <div class="card">
-                    <h3>🚚 Frete / Entrega</h3>
-                    <select id="frete" onchange="App.setFrete(this.value)">
-                        <option value="sede">Retirar na Sede (Sítio Boa Ventura)</option>
-                        <option value="gratis">Frete Grátis (${this.data.logistica.cidadesGratis.join(', ')})</option>
-                        <option value="transp">Transportadora (+ ${formatMoney(this.data.logistica.taxaEnvio)})</option>
-                    </select>
-                    ${this.state.frete !== 'sede' ? `<input type="text" id="endereco" placeholder="Endereço de Entrega / Local na Cidade">` : ''}
-                </div>
-
-                <div class="card">
-                    <h3>💳 Pagamento</h3>
-                    <div style="display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px;font-weight:bold;color:var(--success)">
-                        <span>Total Final:</span>
-                        <span>${formatMoney(resumo.total)}</span>
-                    </div>
-                    <select id="pag" onchange="App.setPag(this.value)">
-                        <option value="pix">Pix (5% Desconto)</option>
-                        <option value="cartao">Cartão de Crédito</option>
-                        <option value="boleto">Boleto (até 6x)</option>
-                    </select>
-
-                    ${this.state.pag === 'boleto' ? `
-                    <div style="background:#eff6ff; padding:10px; border-radius:6px; margin-top:10px; border:1px solid #bfdbfe">
-                        <label style="font-size:12px">Nome Completo</label><input type="text" id="bol_nome">
-                        <label style="font-size:12px">CPF</label><input type="text" id="bol_cpf">
-                        <label style="font-size:12px">Vencimento</label><input type="date" id="bol_data">
-                    </div>` : ''}
-                </div>
-
-                <button class="btn btn-success" onclick="App.enviarZap()">Enviar Pedido no WhatsApp</button>
-                <button class="btn btn-outline" onclick="App.setMode(App.state.mode)">Voltar e Editar</button>
-            </div>`;
-        }
-
-        app.innerHTML = html;
-        if(this.state.modalOpen) this.renderModalFotos();
-    },
-
-    // --- FUNÇÕES DE INTERFACE ---
-
-    // Lista Inteligente de Produtos
-    renderSmartProductList(sel) {
-        let html = '';
-        const allProds = this.data.produtosAvulsos;
-        
-        // 1. Identifica se tem alguma revelação selecionada
-        const prints = allProds.filter(p => p.nome.toLowerCase().includes('foto') || p.nome.toLowerCase().includes('revel'));
-        const frames = allProds.filter(p => p.nome.toLowerCase().includes('porta') || p.nome.toLowerCase().includes('moldura'));
-        const digital = allProds.find(p => p.nome.toLowerCase().includes('digital'));
-
-        const hasAnyPrint = Object.keys(sel.extras).some(k => k.toLowerCase().includes('foto'));
-
-        // Renderiza Revelações
-        prints.forEach(p => {
-            const qtd = sel.extras[p.nome] || 0;
-            html += this.renderStepperItem(p, qtd);
-            
-            // Regra: Se tem revelação X selecionada, mostra moldura X abaixo
-            if (qtd > 0) {
-                // Extrai dimensão (ex: 15x20)
-                const dim = p.nome.match(/\d+x\d+/);
-                if (dim) {
-                    const frameMatch = frames.find(f => f.nome.includes(dim[0]));
-                    if (frameMatch) {
-                        const qtdFrame = sel.extras[frameMatch.nome] || 0;
-                        html += `<div style="margin-left:20px; border-left:2px solid var(--border); padding-left:10px">
-                            ${this.renderStepperItem(frameMatch, qtdFrame)}
-                        </div>`;
-                    }
-                }
-            }
-        });
-
-        // Renderiza Digital (Com Regra de Brinde)
-        if (digital) {
-            if (hasAnyPrint) {
-                html += `
-                <div class="prod-item" style="opacity:0.7">
-                    <div class="prod-info">Arquivo Digital <span class="brinde-tag">BRINDE INCLUSO!</span></div>
-                    <i class="fas fa-check" style="color:var(--success)"></i>
-                </div>`;
-                // Remove cobrança se houver
-                if (sel.extras[digital.nome]) delete sel.extras[digital.nome];
-            } else {
-                html += this.renderStepperItem(digital, sel.extras[digital.nome] || 0);
-            }
-        }
-
-        return html;
-    },
-
-    renderStepperItem(p, qtd) {
-        return `
-        <div class="prod-item">
-            <div>
-                <div class="prod-info">${p.nome}</div>
-                <div class="prod-price">${formatMoney(p.preco)}</div>
-            </div>
-            <div class="stepper">
-                <button onclick="App.addProd('${p.nome}', -1)">-</button>
-                <span>${qtd}</span>
-                <button onclick="App.addProd('${p.nome}', 1)">+</button>
-            </div>
-        </div>`;
-    },
-
-    // --- MODAL ESPIAR FOTOS ---
-    toggleModalFotos() {
-        const modal = document.getElementById('modal-fotos');
-        if(modal) { modal.remove(); return; }
-        
-        // Gera Marca D'água para Thumb
-        const wmText = this.data.assets?.watermarkText || "NBV";
-        const svg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg width='150' height='150' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' transform='rotate(-45 75 75)' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='16' fill='%23000' fill-opacity='0.3'>${wmText}</text></svg>`)}`;
-
-        const gridHtml = this.data.fotos.map(url => `
-            <div class="thumb-box">
-                <img src="${url}">
-                <div class="watermark-overlay" style="background-image:url('${svg}')"></div>
-            </div>
-        `).join('');
-
-        const html = `
-        <div id="modal-fotos" class="modal-overlay" onclick="if(event.target===this) this.remove()">
-            <div class="modal-box">
-                <h3>Suas Fotos (${this.data.fotos.length})</h3>
-                <div class="modal-grid">${gridHtml}</div>
-                <button class="btn btn-outline" style="margin-top:15px" onclick="document.getElementById('modal-fotos').remove()">Fechar</button>
-            </div>
-        </div>`;
-        document.body.insertAdjacentHTML('beforeend', html);
-    },
-
-    // --- LÓGICA DE NEGÓCIO ---
-    calcularOpcoesAlbum(qtd) {
-        // Encontra os tamanhos disponíveis que comportam a qtd
-        const tamanhos = [...new Set(this.data.tabelaFotolivros.map(t => t.size))];
-        const markup = this.data.financeiro.markup;
-        const fixo = this.data.financeiro.custoFixoDiagramacao;
-        const opcoes = [];
-
-        tamanhos.forEach(tam => {
-            // Regra página
-            const fotosPorPag = this.data.regrasDiagramacao[tam] || 4;
-            const pagsNecessarias = Math.ceil(qtd / fotosPorPag);
-            
-            // Busca na tabela
-            const listaTam = this.data.tabelaFotolivros.filter(t => t.size === tam).sort((a,b)=>a.pages-b.pages);
-            const match = listaTam.find(t => t.pages >= pagsNecessarias);
-            
-            if(match) {
-                const precoVenda = (match.price + fixo) * markup; // Preço sem caixa (exemplo)
-                const parcela = (precoVenda * 1.21) / 12; // Juros de 21% em 12x (Exemplo do DB)
-                opcoes.push({ nome: `Fotolivro ${tam} (${match.pages} págs)`, total: precoVenda, parcela: parcela });
-            }
-        });
-        return opcoes;
-    },
-
-    tentarDigitalOnly() {
-        if(confirm("⚠️ TEM CERTEZA?\n\nAs fotos em Arquivo Digital custam R$ 8,00.\nAs fotos Reveladas 10x15 custam R$ 10,00 e você GANHA o arquivo digital de brinde!\n\nVale muito mais a pena revelar.\n\nDeseja mesmo continuar apenas com arquivos?")) {
-            this.setMode('avulso'); // Mas o usuário terá que selecionar manualmente
-            alert("Ok. Selecione 'Arquivo Digital' na lista.");
-        }
-    },
-
-    // --- FUNÇÕES DE NAVEGAÇÃO E STATE ---
-    escolherEdicao(quer) {
-        if(quer) window.location.href = `https://wa.me/${this.data.financeiro.whatsapp}?text=Gostaria de Edicao Artistica.`;
-        else { this.state.view = 'apresentacao'; this.render(); }
-    },
-    irParaModo() { this.state.view = 'modo'; this.render(); },
-    setMode(m) { this.state.mode = m; this.state.view = 'workstation'; this.render(); },
-    nav(d) { this.state.idx = (this.state.idx + d + this.data.fotos.length) % this.data.fotos.length; this.render(); },
-    toggleAlbum() { this.state.sel[this.state.idx].inAlbum = !this.state.sel[this.state.idx].inAlbum; this.render(); },
-    addProd(nome, d) {
-        const curr = this.state.sel[this.state.idx].extras[nome] || 0;
-        const novo = Math.max(0, curr + d);
-        if(novo === 0) delete this.state.sel[this.state.idx].extras[nome];
-        else this.state.sel[this.state.idx].extras[nome] = novo;
-        this.render();
-    },
-    checkout() { this.state.view = 'checkout'; this.render(); },
-    setFrete(v) { this.state.frete = v; this.render(); },
-    setPag(v) { this.state.pag = v; this.render(); },
-
-    // --- CÁLCULO FINAL ---
-    calcularTotal() {
-        let total = 0;
-        let texto = "";
-        
-        // 1. Fotolivro
-        if(this.state.mode === 'album') {
-            const qtd = this.state.sel.filter(s=>s.inAlbum).length;
-            // (Lógica simplificada para demo - em produção usaria a tabela completa de match)
-            if(qtd > 0) {
-                texto += `📚 Fotolivro Seleção: ${qtd} fotos\n(Valor será calculado na conferência)\n`;
-            }
-        }
-
-        // 2. Avulsos
-        this.state.sel.forEach(s => {
-            Object.keys(s.extras).forEach(k => {
-                // Pula se for Digital Brinde (lógica de validação)
-                const hasPrint = Object.keys(s.extras).some(x => x.includes('Foto'));
-                if (k.includes('Digital') && hasPrint) return;
-
-                const p = this.data.produtosAvulsos.find(x=>x.nome===k);
-                if(p) {
-                    const sub = p.preco * s.extras[k];
-                    total += sub;
-                    texto += `🖼️ ${s.extras[k]}x ${k}: ${formatMoney(sub)}\n`;
-                }
-            });
-        });
-
-        // 3. Frete
-        if(this.state.frete === 'transp') {
-            total += this.data.logistica.taxaEnvio;
-            texto += `🚚 Frete: ${formatMoney(this.data.logistica.taxaEnvio)}\n`;
-        }
-
-        // 4. Entrada
-        const entrada = this.data.cliente.entrada || 0;
-        if(entrada > 0) {
-            total -= entrada;
-            texto += `💰 Entrada Paga: - ${formatMoney(entrada)}\n`;
-        }
-        
-        if(total < 0) total = 0;
-        return { total, texto };
-    },
-
-    enviarZap() {
-        const calc = this.calcularTotal();
-        let msg = `*PEDIDO - ${this.data.cliente.nome}*\n\n${calc.texto}\n`;
-        msg += `-------------------\n*TOTAL A PAGAR: ${formatMoney(calc.total)}*\n`;
-        msg += `Pagamento: ${this.state.pag.toUpperCase()}\n`;
-        
-        if(this.state.pag === 'boleto') {
-            const nome = document.getElementById('bol_nome').value;
-            const cpf = document.getElementById('bol_cpf').value;
-            const data = document.getElementById('bol_data').value;
-            msg += `Boleto: ${nome}, CPF ${cpf}, Venc ${data}\n`;
-        }
-
-        if(this.state.frete !== 'sede') {
-            const end = document.getElementById('endereco') ? document.getElementById('endereco').value : 'Frete Grátis na Cidade';
-            msg += `📍 Entrega: ${end}\n`;
-        } else {
-            msg += `📍 Retirada na Sede\n`;
-        }
-
-        window.open(`https://wa.me/${this.data.financeiro.whatsapp}?text=${encodeURIComponent(msg)}`);
+    function showSection(sectionId) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
     }
-};
 
-function formatMoney(v) { return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
-window.onload = () => App.init();
+    function goBack() {
+        showSection('main-menu');
+        currentMode = '';
+        selectedPhotos.clear();
+        currentIndex = 0;
+    }
+
+    // --- FUNÇÕES DA GALERIA (ESPIAR) ---
+
+    function showGallery() {
+        const grid = document.getElementById('gallery-grid');
+        grid.innerHTML = '';
+        photos.forEach(photo => {
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                <img src="${photo.src}" alt="Foto ${photo.id}">
+                <div class="watermark-overlay">Studio NBV</div>
+            `;
+            div.onclick = () => openLightbox(photo.src);
+            grid.appendChild(div);
+        });
+        showSection('gallery-section');
+    }
+
+    // Lightbox Logic
+    function openLightbox(src) {
+        const lightbox = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        img.src = src;
+        lightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = 'none';
+    }
+
+    // --- LÓGICA DE PERSUASÃO (ARQUIVO DIGITAL) ---
+
+    function goToPersuasion() {
+        showSection('persuasion-section');
+    }
+
+    function finishDigitalOrder() {
+        // Se o cliente insistir no digital, vai direto pro resumo (todos os arquivos)
+        currentMode = 'arquivo_completo';
+        showSummary();
+    }
+
+    // --- LÓGICA DE SELEÇÃO (FOTOLIVRO / REVELAÇÃO) ---
+
+    function startSelection(mode) {
+        currentMode = mode;
+        currentIndex = 0;
+        selectedPhotos.clear();
+        updatePhotoViewer();
+        
+        // Texto do cabeçalho
+        const titleMap = {
+            'fotolivro': 'Selecionando para Fotolivro',
+            'revelacao': 'Selecionando para Revelação'
+        };
+        document.getElementById('mode-title').innerText = titleMap[mode];
+        
+        showSection('selection-section');
+    }
+
+    function updatePhotoViewer() {
+        const photo = photos[currentIndex];
+        document.getElementById('current-photo').src = photo.src;
+        document.getElementById('counter').innerText = `Foto ${currentIndex + 1} de ${photos.length}`;
+        
+        // Estado do checkbox
+        const checkbox = document.getElementById('select-photo-check');
+        checkbox.checked = selectedPhotos.has(photo.id);
+        
+        // Lógica do Checkbox (Salvar estado)
+        checkbox.onclick = function() {
+            if (this.checked) {
+                selectedPhotos.add(photo.id);
+            } else {
+                selectedPhotos.delete(photo.id);
+            }
+        };
+
+        // Lógica dos Botões de Navegação
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnFinish = document.getElementById('btn-finish');
+
+        // Botão Anterior
+        if (currentIndex === 0) {
+            btnPrev.disabled = true;
+            btnPrev.style.opacity = '0.5';
+        } else {
+            btnPrev.disabled = false;
+            btnPrev.style.opacity = '1';
+        }
+
+        // Botão Próximo vs Finalizar
+        if (currentIndex === photos.length - 1) {
+            // Última foto
+            btnNext.style.display = 'none';
+            btnFinish.style.display = 'inline-block';
+        } else {
+            // Fotos do meio
+            btnNext.style.display = 'inline-block';
+            btnFinish.style.display = 'none';
+        }
+    }
+
+    function nextPhoto() {
+        if (currentIndex < photos.length - 1) {
+            currentIndex++;
+            updatePhotoViewer();
+        }
+    }
+
+    function prevPhoto() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updatePhotoViewer();
+        }
+    }
+
+    function finishSelection() {
+        showSummary();
+    }
+
+    // --- RESUMO ---
+
+    function showSummary() {
+        let html = '';
+        
+        if (currentMode === 'arquivo_completo') {
+            html = `
+                <p><strong>Tipo:</strong> Somente Arquivos Digitais (Pacote Completo)</p>
+                <p>Você receberá um link para baixar todas as fotos.</p>
+            `;
+        } else {
+            html = `
+                <p><strong>Tipo:</strong> ${currentMode.toUpperCase()}</p>
+                <p><strong>Fotos Selecionadas:</strong> ${selectedPhotos.size}</p>
+                <p>Lista: ${Array.from(selectedPhotos).join(', ')}</p>
+            `;
+            if (currentMode === 'fotolivro') {
+                html += `<hr><p><strong>Valor:</strong> R$ 1.200,00 (ou 12x R$ 100,00)</p>`;
+            }
+        }
+
+        document.getElementById('summary-content').innerHTML = html;
+        showSection('summary-section');
+    }
+
 </script>
+
 </body>
 </html>
