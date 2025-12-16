@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>NBV Admin - Cloud Connected V12</title>
+    <title>NBV Admin - V13 (Path Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -11,8 +11,6 @@
     <style>
         :root { --primary: #0066cc; --bg: #f3f4f6; --sidebar: #fff; --text: #1f2937; --border: #e5e7eb; --success: #16a34a; --danger: #dc2626; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* SIDEBAR */
         .sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
         .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
         
@@ -20,13 +18,10 @@
         .status-bar { padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
         .status-disconnected { background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; }
         .status-connected { background: #dcfce7; color: var(--success); border: 1px solid #86efac; }
-        .status-loading { background: #e0f2fe; color: var(--primary); border: 1px solid #bae6fd; }
 
-        /* NAV */
-        .nav-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 5px; cursor: pointer; border: none; background: none; color: #666; font-weight: 600; display: flex; align-items: center; gap: 10px; border-radius: 6px; transition: 0.2s; }
+        /* UI ELEMENTS */
+        .nav-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 5px; cursor: pointer; border: none; background: none; color: #666; font-weight: 600; display: flex; align-items: center; gap: 10px; border-radius: 6px; }
         .nav-btn:hover, .nav-btn.active { background: #eff6ff; color: var(--primary); }
-        
-        /* FORMS */
         .section { display: none; } .section.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
         
@@ -35,7 +30,6 @@
         .form-group { margin-bottom: 15px; }
         .row { display: flex; gap: 15px; } .col { flex: 1; }
 
-        /* BUTTONS */
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn:hover { opacity: 0.9; }
         .btn-primary { background: var(--primary); } 
@@ -43,11 +37,9 @@
         .btn-add { background: #ecfdf5; color: #16a34a; border: 1px dashed #16a34a; }
         .btn-remove { background: #fee2e2; color: #dc2626; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
 
-        /* LISTS */
         .list-item { background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 5px; display:flex; align-items:center; gap:10px; }
         .credito-box { border: 1px dashed var(--primary); padding: 15px; border-radius: 8px; background: #f0f9ff; margin-top: 15px; }
         
-        /* OVERLAY LOADING */
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
@@ -55,57 +47,63 @@
 
     <div id="loading-overlay">
         <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary)"></i>
-        <p id="loading-text" style="margin-top: 15px; font-weight: 600; color: #555">Conectando ao GitHub...</p>
+        <p id="loading-text" style="margin-top: 15px; font-weight: 600; color: #555">Processando...</p>
     </div>
 
     <div class="sidebar">
         <h2 style="margin:0 0 20px; font-size:1.4rem; color:#333"><i class="fas fa-camera"></i> Studio<span style="color:var(--primary)">NBV</span></h2>
         
         <div id="status-display" class="status-bar status-disconnected">
-            <i class="fas fa-plug"></i> Desconectado
+            <i class="fas fa-plug"></i> Off-line
         </div>
 
         <nav>
-            <button class="nav-btn" onclick="showTab('tab-github')"><i class="fab fa-github"></i> 1. Conexão (Obrigatório)</button>
-            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> 2. Preços & Config</button>
+            <button class="nav-btn" onclick="showTab('tab-github')"><i class="fab fa-github"></i> 1. Conexão</button>
+            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> 2. Preços</button>
             <button class="nav-btn" onclick="showTab('tab-apresentacao')"><i class="fas fa-bullhorn"></i> 3. Textos</button>
             <button class="nav-btn" onclick="showTab('tab-fotolivro')"><i class="fas fa-book"></i> 4. Fotolivros</button>
             <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-images"></i> 5. Avulsos</button>
             <div style="height:1px; background:#eee; margin:10px 0"></div>
-            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> 6. Criar Pedido</button>
+            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> 6. Pedido</button>
         </nav>
         
         <div style="margin-top:auto; padding-top:15px; border-top:1px solid #eee">
             <button class="btn btn-primary" onclick="gerarSiteCompleto()" id="btn-gerar" disabled style="opacity:0.5; cursor:not-allowed">
                 <i class="fas fa-file-zipper"></i> GERAR SITE
             </button>
-            <small style="display:block; text-align:center; color:#999; margin-top:5px">Conecte para habilitar</small>
         </div>
     </div>
 
     <div class="main-content">
 
         <div id="tab-github" class="section">
-            <h2>☁️ Conexão GitHub (Banco de Dados)</h2>
+            <h2>☁️ Configuração do Banco de Dados</h2>
             <div class="card" style="background:white; padding:20px; border-radius:8px; border:1px solid #ddd">
-                <p>O sistema não possui dados internos. Conecte-se para puxar a tabela de preços mais recente.</p>
+                
                 <div class="form-group">
-                    <label>Token Pessoal (GitHub PAT)</label>
-                    <input type="password" id="ghToken" placeholder="ghp_...">
+                    <label>Token Pessoal (GitHub)</label>
+                    <input type="password" id="ghToken">
                 </div>
                 <div class="row">
-                    <div class="col"><label>Usuário</label><input type="text" id="ghUser" placeholder="Ex: usuario"></div>
-                    <div class="col"><label>Repositório</label><input type="text" id="ghRepo" placeholder="Ex: studio-nbv"></div>
+                    <div class="col"><label>Usuário</label><input type="text" id="ghUser"></div>
+                    <div class="col"><label>Repositório</label><input type="text" id="ghRepo"></div>
                 </div>
+                
+                <div class="form-group" style="margin-top:15px; background:#fff3cd; padding:10px; border-radius:6px; border:1px solid #ffeeba">
+                    <label style="color:#856404"><i class="fas fa-folder-open"></i> Onde está o arquivo?</label>
+                    <input type="text" id="ghPath" value="js/database.js" placeholder="Ex: js/database.js ou database.js">
+                    <small style="color:#856404">Se der erro, tente mudar para apenas <b>database.js</b></small>
+                </div>
+
                 <div class="row" style="margin-top:20px">
                     <div class="col">
                         <button class="btn btn-primary" onclick="Github.carregar(true)">
-                            <i class="fas fa-sync"></i> Conectar & Baixar Dados
+                            <i class="fas fa-sync"></i> Conectar e Baixar
                         </button>
                     </div>
                     <div class="col">
                         <button class="btn btn-github" onclick="Github.salvar()">
-                            <i class="fas fa-cloud-upload-alt"></i> Salvar Alterações na Nuvem
+                            <i class="fas fa-cloud-upload-alt"></i> Salvar Alterações
                         </button>
                     </div>
                 </div>
@@ -176,19 +174,14 @@
     </div>
 
     <script>
-        // ESTADO GLOBAL DO GITHUB
-        let ghState = {
-            sha: null,
-            isConnected: false
-        };
+        let ghState = { sha: null, isConnected: false };
 
         window.onload = () => {
             Github.restaurarCredenciais();
-            // Tenta conectar automaticamente se tiver token
             if(document.getElementById('ghToken').value) {
-                Github.carregar(false); // false = sem alert de sucesso, silencioso
+                Github.carregar(false);
             } else {
-                showTab('tab-github'); // Força ir para conexão
+                showTab('tab-github');
             }
         };
 
@@ -197,21 +190,19 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            // Highlight nav button
             const btns = document.querySelectorAll('.nav-btn');
             for(let b of btns) { if(b.getAttribute('onclick').includes(id)) b.classList.add('active'); }
         }
 
-        // --- GITHUB API ENGINE ---
         const Github = {
             restaurarCredenciais: function() {
-                ['ghToken','ghUser','ghRepo'].forEach(k => {
+                ['ghToken','ghUser','ghRepo','ghPath'].forEach(k => {
                     if(localStorage.getItem(k)) document.getElementById(k).value = localStorage.getItem(k);
                 });
             },
             
             salvarCredenciais: function() {
-                ['ghToken','ghUser','ghRepo'].forEach(k => {
+                ['ghToken','ghUser','ghRepo','ghPath'].forEach(k => {
                     localStorage.setItem(k, document.getElementById(k).value);
                 });
             },
@@ -219,7 +210,8 @@
             getApiUrl: function() {
                 const u = document.getElementById('ghUser').value;
                 const r = document.getElementById('ghRepo').value;
-                return `https://api.github.com/repos/${u}/${r}/contents/js/database.js`;
+                const p = document.getElementById('ghPath').value || 'js/database.js';
+                return `https://api.github.com/repos/${u}/${r}/contents/${p}`;
             },
 
             setLoading: function(active, text) {
@@ -234,7 +226,7 @@
                 
                 if(connected) {
                     el.className = 'status-bar status-connected';
-                    el.innerHTML = '<i class="fas fa-check-circle"></i> Conectado ao GitHub';
+                    el.innerHTML = '<i class="fas fa-check-circle"></i> Conectado (' + document.getElementById('ghPath').value + ')';
                     btn.disabled = false;
                     btn.style.opacity = 1;
                     btn.style.cursor = 'pointer';
@@ -246,83 +238,88 @@
                 }
             },
 
-            // CARREGAR (GET)
             carregar: async function(showAlert = true) {
                 this.salvarCredenciais();
                 const token = document.getElementById('ghToken').value;
                 if(!token) { if(showAlert) alert("Preencha o Token!"); return; }
 
-                this.setLoading(true, "Baixando dados do GitHub...");
+                this.setLoading(true, "Baixando dados...");
 
                 try {
                     const res = await fetch(this.getApiUrl(), {
                         headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                     });
 
-                    if(!res.ok) throw new Error(res.statusText);
+                    if(!res.ok) {
+                        if(res.status === 404) throw new Error("Arquivo não encontrado. Verifique se o caminho está correto (ex: database.js ou js/database.js)");
+                        else throw new Error(res.statusText);
+                    }
 
                     const data = await res.json();
-                    ghState.sha = data.sha; // Salva o SHA para poder fazer update depois
+                    ghState.sha = data.sha;
                     
                     const content = decodeURIComponent(escape(window.atob(data.content)));
-                    const jsonStr = content.replace('window.NBV_DB = ', '').replace(/;$/, '');
-                    const db = eval(`(${jsonStr})`); // Parse permissivo
+                    
+                    // Limpeza robusta do arquivo
+                    let jsonStr = content.trim();
+                    jsonStr = jsonStr.replace(/^window\.NBV_DB\s*=\s*/, ''); // Remove inicio
+                    jsonStr = jsonStr.replace(/;\s*$/, ''); // Remove ponto e virgula final
+                    
+                    // Tratamento para "Unexpected token ," (Trailing commas)
+                    // Remove virgulas antes de fechamento de objetos/arrays
+                    jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+
+                    let db;
+                    try {
+                        // Tenta usar new Function para parsear objeto JS (mais permissivo que JSON.parse)
+                        db = new Function('return ' + jsonStr)();
+                    } catch(parseError) {
+                        console.error("Erro ao parsear:", parseError);
+                        alert("O arquivo baixou, mas tem um erro de sintaxe. Verifique vírgulas extras no GitHub.");
+                        throw parseError;
+                    }
 
                     preencherCampos(db);
                     this.updateStatus(true);
-                    if(showAlert) alert("Dados carregados da nuvem com sucesso!");
+                    if(showAlert) alert("Dados carregados com sucesso!");
 
                 } catch(e) {
                     console.error(e);
                     this.updateStatus(false);
-                    if(showAlert) alert("Erro ao conectar: " + e.message + "\nVerifique Token e Nome do Repositório.");
+                    if(showAlert) alert("Erro: " + e.message);
                 } finally {
                     this.setLoading(false);
                 }
             },
 
-            // SALVAR (PUT)
             salvar: async function() {
                 if(!ghState.isConnected) { alert("Conecte-se primeiro!"); return; }
                 const token = document.getElementById('ghToken').value;
                 
-                this.setLoading(true, "Salvando na nuvem...");
+                this.setLoading(true, "Enviando para nuvem...");
 
                 try {
-                    // 1. Antes de salvar, busca o SHA mais recente para evitar conflito
-                    // (Caso alguém tenha editado em outro lugar)
-                    const checkRes = await fetch(this.getApiUrl(), {
-                        headers: { 'Authorization': `token ${token}` }
-                    });
+                    const checkRes = await fetch(this.getApiUrl(), { headers: { 'Authorization': `token ${token}` } });
                     if(checkRes.ok) {
                         const checkData = await checkRes.json();
                         ghState.sha = checkData.sha;
                     }
 
-                    // 2. Monta o objeto
                     const newDB = montarObjeto();
                     const contentStr = `window.NBV_DB = ${JSON.stringify(newDB, null, 4)};`;
                     const contentBase64 = window.btoa(unescape(encodeURIComponent(contentStr)));
 
-                    // 3. Envia
                     const res = await fetch(this.getApiUrl(), {
                         method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: "Update via Admin Panel",
-                            content: contentBase64,
-                            sha: ghState.sha
-                        })
+                        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: "Update via Admin Panel", content: contentBase64, sha: ghState.sha })
                     });
 
                     if(!res.ok) throw new Error(await res.text());
                     
                     const resData = await res.json();
-                    ghState.sha = resData.content.sha; // Atualiza SHA local
-                    alert("✅ Salvo no GitHub com sucesso!");
+                    ghState.sha = resData.content.sha;
+                    alert("✅ Salvo no GitHub!");
 
                 } catch(e) {
                     alert("Erro ao salvar: " + e.message);
@@ -332,18 +329,14 @@
             }
         };
 
-        // ==========================================
-        // MANIPULAÇÃO DE DADOS (UI)
-        // ==========================================
+        // --- PREENCHIMENTO UI ---
         function preencherCampos(db) {
-            // Textos
             if(db.apresentacao) {
                 document.getElementById('txtBook').value = db.apresentacao.book.text || "";
                 document.getElementById('imgBook').value = db.apresentacao.book.img || "";
                 document.getElementById('txtPrint').value = db.apresentacao.print.text || "";
                 document.getElementById('imgPrint').value = db.apresentacao.print.img || "";
             }
-            // Financeiro
             document.getElementById('markup').value = db.financeiro.markup;
             document.getElementById('custoFixo').value = db.financeiro.custoFixoDiagramacao;
             document.getElementById('whatsNum').value = db.financeiro.whatsapp;
@@ -351,7 +344,6 @@
             document.getElementById('freeCities').value = db.logistica.cidadesGratis.join(', ');
             if(db.assets) document.getElementById('wmText').value = db.assets.watermarkText || "NBV";
             
-            // Listas
             document.getElementById('fotolivro-table').innerHTML = ''; 
             (db.tabelaFotolivros || []).forEach(i => addBookRow(i));
 
@@ -374,10 +366,9 @@
                 apresentacao: {
                     book: { text: document.getElementById('txtBook').value, img: document.getElementById('imgBook').value },
                     print: { text: document.getElementById('txtPrint').value, img: document.getElementById('imgPrint').value },
-                    digital: { text: "Link para download.", img: "https://via.placeholder.com/400x200?text=Digital" }
+                    digital: { text: "Link download.", img: "https://via.placeholder.com/400x200" }
                 },
-                tabelaFotolivros: [],
-                produtosAvulsos: [],
+                tabelaFotolivros: [], produtosAvulsos: [],
                 regrasDiagramacao: { "15x20":3, "20x20":4, "20x30":4, "25x25":5, "30x30":6, "30x40":6 }
             };
 
@@ -398,21 +389,20 @@
             return db;
         }
 
-        // Helpers de UI
         function addBookRow(d={}) {
             document.getElementById('fotolivro-table').insertAdjacentHTML('beforeend', 
             `<div class="list-item book-row">
-                <input type="text" class="bk-size" value="${d.size||'20x20'}" style="width:80px" placeholder="Tam">
-                <input type="number" class="bk-pages" value="${d.pages||20}" style="width:60px" placeholder="Págs">
-                <input type="number" class="bk-price" value="${d.price||0}" style="width:80px" placeholder="Custo">
+                <input type="text" class="bk-size" value="${d.size||'20x20'}" style="width:80px">
+                <input type="number" class="bk-pages" value="${d.pages||20}" style="width:60px">
+                <input type="number" class="bk-price" value="${d.price||0}" style="width:80px">
                 <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
             </div>`);
         }
         function addProdRow(d={}) {
             document.getElementById('produtos-list').insertAdjacentHTML('beforeend', 
             `<div class="list-item prod-row">
-                <input type="text" class="pd-name" value="${d.nome||''}" placeholder="Nome" style="flex:2">
-                <input type="number" class="pd-price" value="${d.preco||0}" placeholder="Preço" style="flex:1">
+                <input type="text" class="pd-name" value="${d.nome||''}" style="flex:2">
+                <input type="number" class="pd-price" value="${d.preco||0}" style="flex:1">
                 <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
             </div>`);
         }
@@ -430,18 +420,13 @@
             </div>`);
         }
 
-        // ==========================================
-        // GERADOR DE ZIP (FINAL)
-        // ==========================================
         async function gerarSiteCompleto() {
-            if(!ghState.isConnected) return alert("Conecte ao GitHub primeiro!");
-
+            if(!ghState.isConnected) return alert("Conecte ao GitHub!");
             const nomeCli = document.getElementById('cliName').value || "Cliente";
             const fotos = document.getElementById('cliFotos').value.split('\n').filter(x => x.trim());
             
-            if(fotos.length === 0) return alert("Sem fotos!");
+            if(fotos.length === 0) return alert("Adicione fotos!");
 
-            // Créditos
             const creditos = [];
             document.querySelectorAll('.credito-row').forEach(r => {
                 const item = r.querySelector('.cr-item').value;
@@ -449,7 +434,6 @@
                 if(item && qtd > 0) creditos.push({ item, qtd });
             });
 
-            // Config Final
             const configDB = montarObjeto();
             const configCliente = {
                 ...configDB,
@@ -465,16 +449,15 @@
                 }
             };
 
-            // HTML CLIENTE (Integrado, sem arquivos externos)
             const clientHTML = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Pedido NBV - ${nomeCli}</title>
+<title>Pedido Studio NBV - ${nomeCli}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* ESTILOS */
+/* TEMA E ESTILOS */
 :root{ --bg:#f8f9fa; --card:#ffffff; --text:#1f2937; --primary:#007bff; --success:#28a745; --border:#dee2e6; --warning:#ffc107; }
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:100px}
 .container{max-width:800px;margin:0 auto;padding:20px}
@@ -734,7 +717,7 @@ const App = {
     setFrete(v) { this.state.frete = v; this.render(); },
     setPag(v) { this.state.pag = v; },
 
-    // CALCULOS DE CRÉDITO
+    // CALCULOS
     calcAlbum(qtd) {
         const ts = [...new Set(this.data.tabelaFotolivros.map(t=>t.size))];
         const res = [];
