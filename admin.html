@@ -2,214 +2,193 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>NBV Admin - Painel de Controle (GitHub Connected)</title>
+    <title>NBV Admin - Cloud Connected V12</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
-    <script src="js/database.js" onerror="console.log('Database local não encontrado, use o GitHub.')"></script> 
 
     <style>
-        :root { --primary: #0066cc; --bg: #f3f4f6; --sidebar: #fff; --text: #1f2937; --border: #e5e7eb; }
+        :root { --primary: #0066cc; --bg: #f3f4f6; --sidebar: #fff; --text: #1f2937; --border: #e5e7eb; --success: #16a34a; --danger: #dc2626; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* LAYOUT */
+        /* SIDEBAR */
         .sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
         .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
         
-        /* NAVEGAÇÃO */
+        /* STATUS BAR */
+        .status-bar { padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
+        .status-disconnected { background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; }
+        .status-connected { background: #dcfce7; color: var(--success); border: 1px solid #86efac; }
+        .status-loading { background: #e0f2fe; color: var(--primary); border: 1px solid #bae6fd; }
+
+        /* NAV */
         .nav-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 5px; cursor: pointer; border: none; background: none; color: #666; font-weight: 600; display: flex; align-items: center; gap: 10px; border-radius: 6px; transition: 0.2s; }
         .nav-btn:hover, .nav-btn.active { background: #eff6ff; color: var(--primary); }
-        .nav-btn.github-active { background: #24292e; color: white; }
         
-        /* SEÇÕES */
+        /* FORMS */
         .section { display: none; } .section.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
         
-        /* FORMULÁRIOS */
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px; }
+        label { font-weight: 600; font-size: 0.9rem; color: #374151; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         .row { display: flex; gap: 15px; } .col { flex: 1; }
-        
-        /* BOTÕES */
+
+        /* BUTTONS */
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-        
+        .btn:hover { opacity: 0.9; }
         .btn-primary { background: var(--primary); } 
-        .btn-success { background: #16a34a; } 
         .btn-github { background: #24292e; }
         .btn-add { background: #ecfdf5; color: #16a34a; border: 1px dashed #16a34a; }
         .btn-remove { background: #fee2e2; color: #dc2626; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
 
-        /* LISTAS E COMPONENTES */
+        /* LISTS */
         .list-item { background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 5px; display:flex; align-items:center; gap:10px; }
-        .mode-selector { padding: 15px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 8px; margin-bottom: 20px; }
         .credito-box { border: 1px dashed var(--primary); padding: 15px; border-radius: 8px; background: #f0f9ff; margin-top: 15px; }
         
-        /* LOADER GITHUB */
-        #gh-status { font-size: 0.8rem; margin-top: 5px; text-align: center; height: 20px; }
+        /* OVERLAY LOADING */
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
+    <div id="loading-overlay">
+        <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary)"></i>
+        <p id="loading-text" style="margin-top: 15px; font-weight: 600; color: #555">Conectando ao GitHub...</p>
+    </div>
+
     <div class="sidebar">
         <h2 style="margin:0 0 20px; font-size:1.4rem; color:#333"><i class="fas fa-camera"></i> Studio<span style="color:var(--primary)">NBV</span></h2>
         
-        <div style="margin-bottom:20px; font-size:0.8rem; padding:8px; background:#f3f4f6; border-radius:6px; text-align:center" id="connection-status">
-            <i class="fas fa-circle" style="color:#ccc"></i> GitHub Desconectado
+        <div id="status-display" class="status-bar status-disconnected">
+            <i class="fas fa-plug"></i> Desconectado
         </div>
 
         <nav>
-            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> Cliente & Fluxo</button>
-            <button class="nav-btn" onclick="showTab('tab-apresentacao')"><i class="fas fa-bullhorn"></i> Apresentação</button>
-            <button class="nav-btn" onclick="showTab('tab-fotolivro')"><i class="fas fa-book"></i> Tabela Fotolivros</button>
-            <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-images"></i> Produtos Avulsos</button>
-            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> Financeiro & Log.</button>
+            <button class="nav-btn" onclick="showTab('tab-github')"><i class="fab fa-github"></i> 1. Conexão (Obrigatório)</button>
+            <button class="nav-btn" onclick="showTab('tab-financeiro')"><i class="fas fa-coins"></i> 2. Preços & Config</button>
+            <button class="nav-btn" onclick="showTab('tab-apresentacao')"><i class="fas fa-bullhorn"></i> 3. Textos</button>
+            <button class="nav-btn" onclick="showTab('tab-fotolivro')"><i class="fas fa-book"></i> 4. Fotolivros</button>
+            <button class="nav-btn" onclick="showTab('tab-produtos')"><i class="fas fa-images"></i> 5. Avulsos</button>
             <div style="height:1px; background:#eee; margin:10px 0"></div>
-            <button class="nav-btn" onclick="showTab('tab-github')"><i class="fab fa-github"></i> Conexão GitHub</button>
+            <button class="nav-btn active" onclick="showTab('tab-cliente')"><i class="fas fa-user"></i> 6. Criar Pedido</button>
         </nav>
         
         <div style="margin-top:auto; padding-top:15px; border-top:1px solid #eee">
-            <button class="btn btn-primary" onclick="gerarSiteCompleto()"><i class="fas fa-file-zipper"></i> GERAR SITE CLIENTE</button>
+            <button class="btn btn-primary" onclick="gerarSiteCompleto()" id="btn-gerar" disabled style="opacity:0.5; cursor:not-allowed">
+                <i class="fas fa-file-zipper"></i> GERAR SITE
+            </button>
+            <small style="display:block; text-align:center; color:#999; margin-top:5px">Conecte para habilitar</small>
         </div>
     </div>
 
     <div class="main-content">
-        
+
+        <div id="tab-github" class="section">
+            <h2>☁️ Conexão GitHub (Banco de Dados)</h2>
+            <div class="card" style="background:white; padding:20px; border-radius:8px; border:1px solid #ddd">
+                <p>O sistema não possui dados internos. Conecte-se para puxar a tabela de preços mais recente.</p>
+                <div class="form-group">
+                    <label>Token Pessoal (GitHub PAT)</label>
+                    <input type="password" id="ghToken" placeholder="ghp_...">
+                </div>
+                <div class="row">
+                    <div class="col"><label>Usuário</label><input type="text" id="ghUser" placeholder="Ex: usuario"></div>
+                    <div class="col"><label>Repositório</label><input type="text" id="ghRepo" placeholder="Ex: studio-nbv"></div>
+                </div>
+                <div class="row" style="margin-top:20px">
+                    <div class="col">
+                        <button class="btn btn-primary" onclick="Github.carregar(true)">
+                            <i class="fas fa-sync"></i> Conectar & Baixar Dados
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-github" onclick="Github.salvar()">
+                            <i class="fas fa-cloud-upload-alt"></i> Salvar Alterações na Nuvem
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-cliente" class="section active">
             <h2>Dados do Cliente</h2>
-            <div class="form-group"><label>Nome do Cliente</label><input type="text" id="cliName" placeholder="Ex: Maria e João"></div>
-            <div class="form-group"><label>Links das Fotos (Uma URL por linha)</label><textarea id="cliFotos" rows="6" placeholder="https://..."></textarea></div>
+            <div class="form-group"><label>Nome</label><input type="text" id="cliName"></div>
+            <div class="form-group"><label>Links Fotos (Uma URL por linha)</label><textarea id="cliFotos" rows="6"></textarea></div>
             
             <div class="mode-selector">
-                <label>Objetivo do Link:</label>
+                <label>Objetivo:</label>
                 <select id="fluxoModo">
-                    <option value="venda">💰 Venda Completa (Persuasão + Vendas)</option>
-                    <option value="aprovacao">✅ Apenas Aprovação (Simples)</option>
+                    <option value="venda">💰 Venda Completa</option>
+                    <option value="aprovacao">✅ Apenas Aprovação</option>
                 </select>
             </div>
 
             <div class="row">
-                <div class="col"><div class="form-group"><label>Entrada já Paga (R$)</label><input type="number" id="cliEntrada" value="0.00"></div></div>
+                <div class="col"><label>Entrada Paga (R$)</label><input type="number" id="cliEntrada" value="0.00"></div>
                 <div class="col">
-                    <div class="form-group">
-                        <label>Contrato Fechado?</label>
-                        <select id="cliIncluirAlbum">
-                            <option value="nao">Não (Venda Avulsa)</option>
-                            <option value="sim">Sim (Já pagou álbum)</option>
-                        </select>
-                    </div>
+                    <label>Já tem álbum pago?</label>
+                    <select id="cliIncluirAlbum"><option value="nao">Não</option><option value="sim">Sim</option></select>
                 </div>
             </div>
 
             <div class="credito-box">
-                <label style="color:var(--primary)">🎁 Créditos / Brindes Inclusos</label>
-                <p style="font-size:0.8rem; color:#666; margin-top:0">Ex: Se o pacote inclui 4 fotos 10x15, adicione aqui.</p>
+                <label style="color:var(--primary)">🎁 Créditos / Brindes</label>
                 <div id="creditos-list"></div>
-                <button class="btn btn-add" style="width:auto; padding:8px 15px; font-size:0.9rem" onclick="addCreditoRow()">+ Adicionar Crédito</button>
+                <button class="btn btn-add" style="width:auto; padding:8px" onclick="addCreditoRow()">+ Item</button>
             </div>
+        </div>
+
+        <div id="tab-financeiro" class="section">
+            <h2>Configurações Gerais</h2>
+            <div class="form-group"><label>WhatsApp</label><input type="text" id="whatsNum"></div>
+            <div class="form-group"><label>Taxa Entrega</label><input type="number" id="shipPrice"></div>
+            <div class="form-group"><label>Cidades Grátis</label><input type="text" id="freeCities"></div>
+            <div class="form-group"><label>Marca D'água</label><input type="text" id="wmText"></div>
         </div>
 
         <div id="tab-apresentacao" class="section">
-            <h2>Textos de Venda</h2>
-            <div class="form-group"><label>Texto Fotolivro</label><textarea id="txtBook" rows="2">Eternize momentos em capa dura e alta resolução.</textarea></div>
-            <div class="form-group"><label>Img Fotolivro</label><input type="text" id="imgBook" value="https://via.placeholder.com/400x200?text=Fotolivro"></div>
+            <h2>Textos</h2>
+            <label>Fotolivro</label><textarea id="txtBook" rows="2"></textarea>
+            <input type="text" id="imgBook" placeholder="URL Imagem">
             <hr>
-            <div class="form-group"><label>Texto Revelação</label><textarea id="txtPrint" rows="2">Qualidade Fujifilm com durabilidade de 100 anos.</textarea></div>
-            <div class="form-group"><label>Img Revelação</label><input type="text" id="imgPrint" value="https://via.placeholder.com/400x200?text=Revelacao"></div>
+            <label>Revelação</label><textarea id="txtPrint" rows="2"></textarea>
+            <input type="text" id="imgPrint" placeholder="URL Imagem">
         </div>
 
         <div id="tab-fotolivro" class="section">
-            <h2>Tabela de Preços (Custo)</h2>
+            <h2>Tabela Fotolivro</h2>
             <div class="row">
-                <div class="col"><label>Markup (Multiplicador)</label><input type="number" id="markup" value="2.5"></div>
-                <div class="col"><label>Custo Fixo Diag.</label><input type="number" id="custoFixo" value="100"></div>
+                <div class="col"><label>Markup</label><input type="number" id="markup"></div>
+                <div class="col"><label>Custo Fixo</label><input type="number" id="custoFixo"></div>
             </div>
             <div id="fotolivro-table"></div>
-            <button class="btn btn-add" onclick="addBookRow()">+ Adicionar Tamanho</button>
+            <button class="btn btn-add" onclick="addBookRow()">+ Tamanho</button>
         </div>
 
         <div id="tab-produtos" class="section">
             <h2>Produtos Avulsos</h2>
             <div id="produtos-list"></div>
-            <button class="btn btn-add" onclick="addProdRow()">+ Adicionar Produto</button>
-        </div>
-
-        <div id="tab-financeiro" class="section">
-            <h2>Financeiro & Config</h2>
-            <div class="form-group"><label>WhatsApp (DDD+Num)</label><input type="text" id="whatsNum"></div>
-            <div class="form-group"><label>Taxa de Entrega (R$)</label><input type="number" id="shipPrice"></div>
-            <div class="form-group"><label>Cidades Frete Grátis</label><input type="text" id="freeCities"></div>
-            <div class="form-group"><label>Marca D'água Texto</label><input type="text" id="wmText" value="PROVA NBV"></div>
-        </div>
-
-        <div id="tab-github" class="section">
-            <h2>Conexão com GitHub</h2>
-            <div class="card" style="background:white; padding:20px; border-radius:8px; border:1px solid #ddd">
-                <p style="font-size:0.9rem; color:#666; margin-bottom:20px">
-                    Conecte-se para carregar e salvar as configurações padrão (Preços, Produtos, Textos) diretamente no servidor.
-                </p>
-                
-                <div class="form-group">
-                    <label>Token de Acesso Pessoal (GitHub PAT)</label>
-                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
-                </div>
-                
-                <div class="row">
-                    <div class="col">
-                        <label>Usuário GitHub</label>
-                        <input type="text" id="ghUser" placeholder="Ex: seu-usuario">
-                    </div>
-                    <div class="col">
-                        <label>Repositório</label>
-                        <input type="text" id="ghRepo" placeholder="Ex: studio-nbv">
-                    </div>
-                </div>
-                
-                <div class="row" style="margin-top:20px">
-                    <div class="col">
-                        <button class="btn btn-secondary" onclick="Github.carregar()" style="width:100%">
-                            <i class="fas fa-download"></i> Carregar do GitHub
-                        </button>
-                    </div>
-                    <div class="col">
-                        <button class="btn btn-github" onclick="Github.salvar()" style="width:100%">
-                            <i class="fas fa-cloud-upload-alt"></i> Salvar no GitHub
-                        </button>
-                    </div>
-                </div>
-                <div id="gh-status" style="color:#666; margin-top:10px; font-weight:bold"></div>
-            </div>
+            <button class="btn btn-add" onclick="addProdRow()">+ Produto</button>
         </div>
 
     </div>
 
     <script>
-        // Dados Padrão (Caso falhe tudo)
-        const DEFAULT_DB = {
-            tabelaFotolivros: [{ size: "20x20", pages: 20, price: 200 }, { size: "25x25", pages: 20, price: 300 }],
-            produtosAvulsos: [{ nome: "Revelação 10x15", preco: 10.00 }, { nome: "Arquivo Digital", preco: 8.00 }],
-            financeiro: { whatsapp: "5500000000000", markup: 2.5, custoFixoDiagramacao: 100 },
-            logistica: { taxaEnvio: 30, cidadesGratis: ["Boa Ventura", "Turvo"] },
-            regrasDiagramacao: { "20x20": 4, "25x25": 5 }
+        // ESTADO GLOBAL DO GITHUB
+        let ghState = {
+            sha: null,
+            isConnected: false
         };
 
-        let currentSha = null; // Necessário para update no GitHub
-
-        window.onload = function() {
-            // Tenta carregar credenciais salvas
+        window.onload = () => {
             Github.restaurarCredenciais();
-            
-            // Tenta usar o DB local se existir
-            if (window.NBV_DB) {
-                carregarDB(window.NBV_DB);
-                console.log("DB Local carregado.");
+            // Tenta conectar automaticamente se tiver token
+            if(document.getElementById('ghToken').value) {
+                Github.carregar(false); // false = sem alert de sucesso, silencioso
             } else {
-                carregarDB(DEFAULT_DB);
+                showTab('tab-github'); // Força ir para conexão
             }
         };
 
@@ -218,25 +197,152 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            // Encontra o botão correspondente para marcar ativo
-            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.onclick.toString().includes(id));
-            if(btn) btn.classList.add('active');
+            // Highlight nav button
+            const btns = document.querySelectorAll('.nav-btn');
+            for(let b of btns) { if(b.getAttribute('onclick').includes(id)) b.classList.add('active'); }
         }
 
-        // ==========================================
-        // GESTÃO DO BANCO DE DADOS (UI)
-        // ==========================================
-        function carregarDB(db) {
-            if(!db) return;
+        // --- GITHUB API ENGINE ---
+        const Github = {
+            restaurarCredenciais: function() {
+                ['ghToken','ghUser','ghRepo'].forEach(k => {
+                    if(localStorage.getItem(k)) document.getElementById(k).value = localStorage.getItem(k);
+                });
+            },
             
-            // Textos e Imagens
+            salvarCredenciais: function() {
+                ['ghToken','ghUser','ghRepo'].forEach(k => {
+                    localStorage.setItem(k, document.getElementById(k).value);
+                });
+            },
+
+            getApiUrl: function() {
+                const u = document.getElementById('ghUser').value;
+                const r = document.getElementById('ghRepo').value;
+                return `https://api.github.com/repos/${u}/${r}/contents/js/database.js`;
+            },
+
+            setLoading: function(active, text) {
+                document.getElementById('loading-overlay').style.display = active ? 'flex' : 'none';
+                if(text) document.getElementById('loading-text').innerText = text;
+            },
+
+            updateStatus: function(connected) {
+                const el = document.getElementById('status-display');
+                const btn = document.getElementById('btn-gerar');
+                ghState.isConnected = connected;
+                
+                if(connected) {
+                    el.className = 'status-bar status-connected';
+                    el.innerHTML = '<i class="fas fa-check-circle"></i> Conectado ao GitHub';
+                    btn.disabled = false;
+                    btn.style.opacity = 1;
+                    btn.style.cursor = 'pointer';
+                } else {
+                    el.className = 'status-bar status-disconnected';
+                    el.innerHTML = '<i class="fas fa-plug"></i> Desconectado';
+                    btn.disabled = true;
+                    btn.style.opacity = 0.5;
+                }
+            },
+
+            // CARREGAR (GET)
+            carregar: async function(showAlert = true) {
+                this.salvarCredenciais();
+                const token = document.getElementById('ghToken').value;
+                if(!token) { if(showAlert) alert("Preencha o Token!"); return; }
+
+                this.setLoading(true, "Baixando dados do GitHub...");
+
+                try {
+                    const res = await fetch(this.getApiUrl(), {
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                    });
+
+                    if(!res.ok) throw new Error(res.statusText);
+
+                    const data = await res.json();
+                    ghState.sha = data.sha; // Salva o SHA para poder fazer update depois
+                    
+                    const content = decodeURIComponent(escape(window.atob(data.content)));
+                    const jsonStr = content.replace('window.NBV_DB = ', '').replace(/;$/, '');
+                    const db = eval(`(${jsonStr})`); // Parse permissivo
+
+                    preencherCampos(db);
+                    this.updateStatus(true);
+                    if(showAlert) alert("Dados carregados da nuvem com sucesso!");
+
+                } catch(e) {
+                    console.error(e);
+                    this.updateStatus(false);
+                    if(showAlert) alert("Erro ao conectar: " + e.message + "\nVerifique Token e Nome do Repositório.");
+                } finally {
+                    this.setLoading(false);
+                }
+            },
+
+            // SALVAR (PUT)
+            salvar: async function() {
+                if(!ghState.isConnected) { alert("Conecte-se primeiro!"); return; }
+                const token = document.getElementById('ghToken').value;
+                
+                this.setLoading(true, "Salvando na nuvem...");
+
+                try {
+                    // 1. Antes de salvar, busca o SHA mais recente para evitar conflito
+                    // (Caso alguém tenha editado em outro lugar)
+                    const checkRes = await fetch(this.getApiUrl(), {
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if(checkRes.ok) {
+                        const checkData = await checkRes.json();
+                        ghState.sha = checkData.sha;
+                    }
+
+                    // 2. Monta o objeto
+                    const newDB = montarObjeto();
+                    const contentStr = `window.NBV_DB = ${JSON.stringify(newDB, null, 4)};`;
+                    const contentBase64 = window.btoa(unescape(encodeURIComponent(contentStr)));
+
+                    // 3. Envia
+                    const res = await fetch(this.getApiUrl(), {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: "Update via Admin Panel",
+                            content: contentBase64,
+                            sha: ghState.sha
+                        })
+                    });
+
+                    if(!res.ok) throw new Error(await res.text());
+                    
+                    const resData = await res.json();
+                    ghState.sha = resData.content.sha; // Atualiza SHA local
+                    alert("✅ Salvo no GitHub com sucesso!");
+
+                } catch(e) {
+                    alert("Erro ao salvar: " + e.message);
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+        };
+
+        // ==========================================
+        // MANIPULAÇÃO DE DADOS (UI)
+        // ==========================================
+        function preencherCampos(db) {
+            // Textos
             if(db.apresentacao) {
                 document.getElementById('txtBook').value = db.apresentacao.book.text || "";
                 document.getElementById('imgBook').value = db.apresentacao.book.img || "";
                 document.getElementById('txtPrint').value = db.apresentacao.print.text || "";
                 document.getElementById('imgPrint').value = db.apresentacao.print.img || "";
             }
-
             // Financeiro
             document.getElementById('markup').value = db.financeiro.markup;
             document.getElementById('custoFixo').value = db.financeiro.custoFixoDiagramacao;
@@ -245,23 +351,17 @@
             document.getElementById('freeCities').value = db.logistica.cidadesGratis.join(', ');
             if(db.assets) document.getElementById('wmText').value = db.assets.watermarkText || "NBV";
             
-            // Tabelas
-            const tbL = document.getElementById('fotolivro-table'); 
-            tbL.innerHTML = ''; 
+            // Listas
+            document.getElementById('fotolivro-table').innerHTML = ''; 
             (db.tabelaFotolivros || []).forEach(i => addBookRow(i));
 
-            const tbP = document.getElementById('produtos-list'); 
-            tbP.innerHTML = ''; 
+            document.getElementById('produtos-list').innerHTML = ''; 
             (db.produtosAvulsos || []).forEach(i => addProdRow(i));
         }
 
-        function montarObjetoDB() {
-            // Cria objeto JSON baseado nos campos atuais para salvar
+        function montarObjeto() {
             const db = {
-                assets: { 
-                    watermarkText: document.getElementById('wmText').value, 
-                    opacity: 0.3 
-                },
+                assets: { watermarkText: document.getElementById('wmText').value, opacity: 0.3 },
                 financeiro: {
                     markup: Number(document.getElementById('markup').value),
                     custoFixoDiagramacao: Number(document.getElementById('custoFixo').value),
@@ -274,7 +374,7 @@
                 apresentacao: {
                     book: { text: document.getElementById('txtBook').value, img: document.getElementById('imgBook').value },
                     print: { text: document.getElementById('txtPrint').value, img: document.getElementById('imgPrint').value },
-                    digital: { text: "Link para download em alta resolução.", img: "https://via.placeholder.com/400x200?text=Digital" }
+                    digital: { text: "Link para download.", img: "https://via.placeholder.com/400x200?text=Digital" }
                 },
                 tabelaFotolivros: [],
                 produtosAvulsos: [],
@@ -295,12 +395,11 @@
                     preco: Number(r.querySelector('.pd-price').value)
                 });
             });
-            
             return db;
         }
 
         // Helpers de UI
-        function addBookRow(d = {}) {
+        function addBookRow(d={}) {
             document.getElementById('fotolivro-table').insertAdjacentHTML('beforeend', 
             `<div class="list-item book-row">
                 <input type="text" class="bk-size" value="${d.size||'20x20'}" style="width:80px" placeholder="Tam">
@@ -309,180 +408,51 @@
                 <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
             </div>`);
         }
-        function addProdRow(d = {}) {
+        function addProdRow(d={}) {
             document.getElementById('produtos-list').insertAdjacentHTML('beforeend', 
             `<div class="list-item prod-row">
-                <input type="text" class="pd-name" value="${d.nome||''}" placeholder="Nome Produto" style="flex:2">
+                <input type="text" class="pd-name" value="${d.nome||''}" placeholder="Nome" style="flex:2">
                 <input type="number" class="pd-price" value="${d.preco||0}" placeholder="Preço" style="flex:1">
                 <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
             </div>`);
         }
         function addCreditoRow() {
-            let options = '<option value="">Selecione...</option>';
-            document.querySelectorAll('.prod-row').forEach(row => {
-                const nome = row.querySelector('.pd-name').value;
-                if(nome) options += `<option value="${nome}">${nome}</option>`;
+            let opts = '<option value="">Selecione...</option>';
+            document.querySelectorAll('.prod-row').forEach(r => {
+                const val = r.querySelector('.pd-name').value;
+                if(val) opts += `<option value="${val}">${val}</option>`;
             });
             document.getElementById('creditos-list').insertAdjacentHTML('beforeend', 
             `<div class="list-item credito-row">
-                <select class="cr-item" style="flex:2">${options}</select>
-                <input type="number" class="cr-qtd" value="1" style="width:70px" placeholder="Qtd">
+                <select class="cr-item" style="flex:2">${opts}</select>
+                <input type="number" class="cr-qtd" value="1" style="width:70px">
                 <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
             </div>`);
         }
 
         // ==========================================
-        // LÓGICA GITHUB API
-        // ==========================================
-        const Github = {
-            restaurarCredenciais: function() {
-                if(localStorage.getItem('ghToken')) document.getElementById('ghToken').value = localStorage.getItem('ghToken');
-                if(localStorage.getItem('ghUser')) document.getElementById('ghUser').value = localStorage.getItem('ghUser');
-                if(localStorage.getItem('ghRepo')) document.getElementById('ghRepo').value = localStorage.getItem('ghRepo');
-                
-                if(localStorage.getItem('ghToken')) this.setStatus('Pronto para conectar.', 'black');
-            },
-
-            salvarCredenciais: function() {
-                localStorage.setItem('ghToken', document.getElementById('ghToken').value);
-                localStorage.setItem('ghUser', document.getElementById('ghUser').value);
-                localStorage.setItem('ghRepo', document.getElementById('ghRepo').value);
-            },
-
-            setStatus: function(msg, color) {
-                const el = document.getElementById('gh-status');
-                const badge = document.getElementById('connection-status');
-                el.innerText = msg;
-                el.style.color = color;
-                
-                if(color === 'green') {
-                    badge.innerHTML = '<i class="fas fa-check-circle" style="color:#16a34a"></i> Conectado';
-                    badge.style.background = "#dcfce7";
-                } else if (color === 'red') {
-                    badge.innerHTML = '<i class="fas fa-times-circle" style="color:red"></i> Erro';
-                }
-            },
-
-            getApiUrl: function() {
-                const user = document.getElementById('ghUser').value;
-                const repo = document.getElementById('ghRepo').value;
-                return `https://api.github.com/repos/${user}/${repo}/contents/js/database.js`;
-            },
-
-            carregar: async function() {
-                this.salvarCredenciais();
-                const token = document.getElementById('ghToken').value;
-                
-                if(!token) return alert("Insira o Token do GitHub!");
-                this.setStatus('Baixando dados...', 'blue');
-
-                try {
-                    const response = await fetch(this.getApiUrl(), {
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-
-                    if(!response.ok) throw new Error("Arquivo js/database.js não encontrado ou erro de permissão.");
-
-                    const data = await response.json();
-                    currentSha = data.sha; // Importante para poder salvar depois
-                    
-                    // Decodifica Base64
-                    const content = decodeURIComponent(escape(window.atob(data.content)));
-                    
-                    // Extrai o objeto JSON da string (remove "window.NBV_DB = " e ";")
-                    const jsonStr = content.replace('window.NBV_DB = ', '').replace(/;$/, '');
-                    
-                    // Converte para objeto real
-                    // Nota: Usando eval() aqui pois o arquivo pode não ser JSON estrito, mas JS válido.
-                    // Em um admin protegido, isso é aceitável.
-                    const db = eval(`(${jsonStr})`);
-                    
-                    carregarDB(db);
-                    this.setStatus('Dados carregados com sucesso!', 'green');
-                    alert("Configurações atualizadas do GitHub!");
-
-                } catch (e) {
-                    console.error(e);
-                    this.setStatus('Erro: ' + e.message, 'red');
-                    alert("Erro ao carregar: " + e.message);
-                }
-            },
-
-            salvar: async function() {
-                this.salvarCredenciais();
-                const token = document.getElementById('ghToken').value;
-                
-                if(!token) return alert("Insira o Token!");
-                if(!currentSha && !confirm("Atenção: Não carregamos o arquivo antes. Isso pode criar um arquivo novo ou sobrescrever sem verificar. Continuar?")) return;
-
-                this.setStatus('Enviando dados...', 'blue');
-
-                try {
-                    // 1. Monta o objeto novo
-                    const newDB = montarObjetoDB();
-                    const contentStr = `window.NBV_DB = ${JSON.stringify(newDB, null, 4)};`;
-                    
-                    // 2. Converte para Base64
-                    const contentBase64 = window.btoa(unescape(encodeURIComponent(contentStr)));
-
-                    // 3. Payload do GitHub
-                    const payload = {
-                        message: "Update database.js via Admin Painel",
-                        content: contentBase64,
-                        sha: currentSha // Se for null, o GitHub tenta criar novo arquivo
-                    };
-
-                    // 4. Envia PUT
-                    const response = await fetch(this.getApiUrl(), {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if(!response.ok) throw new Error("Erro ao salvar no GitHub.");
-                    
-                    const resData = await response.json();
-                    currentSha = resData.content.sha; // Atualiza SHA
-                    
-                    this.setStatus('Salvo com sucesso no GitHub!', 'green');
-                    alert("Sucesso! As configurações foram salvas na nuvem.");
-
-                } catch (e) {
-                    console.error(e);
-                    this.setStatus('Erro ao salvar: ' + e.message, 'red');
-                    alert("Erro ao salvar.");
-                }
-            }
-        };
-
-        // ==========================================
-        // O GERADOR DE ZIP (CLIENTE)
+        // GERADOR DE ZIP (FINAL)
         // ==========================================
         async function gerarSiteCompleto() {
+            if(!ghState.isConnected) return alert("Conecte ao GitHub primeiro!");
+
             const nomeCli = document.getElementById('cliName').value || "Cliente";
             const fotos = document.getElementById('cliFotos').value.split('\n').filter(x => x.trim());
             
-            if(fotos.length === 0) return alert("Adicione pelo menos uma foto!");
+            if(fotos.length === 0) return alert("Sem fotos!");
 
+            // Créditos
             const creditos = [];
-            document.querySelectorAll('.credito-row').forEach(row => {
-                const item = row.querySelector('.cr-item').value;
-                const qtd = Number(row.querySelector('.cr-qtd').value);
+            document.querySelectorAll('.credito-row').forEach(r => {
+                const item = r.querySelector('.cr-item').value;
+                const qtd = Number(r.querySelector('.cr-qtd').value);
                 if(item && qtd > 0) creditos.push({ item, qtd });
             });
 
-            // Pega config atual dos inputs
-            const configDB = montarObjetoDB(); 
-            
-            // Cria config específica do cliente mesclando
+            // Config Final
+            const configDB = montarObjeto();
             const configCliente = {
-                ...configDB, // Herda tudo do DB (preços, textos)
+                ...configDB,
                 cliente: { 
                     nome: nomeCli, 
                     entrada: Number(document.getElementById('cliEntrada').value),
@@ -495,16 +465,16 @@
                 }
             };
 
-            // O HTML DO CLIENTE (FINAL)
+            // HTML CLIENTE (Integrado, sem arquivos externos)
             const clientHTML = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Pedido Studio NBV - ${nomeCli}</title>
+<title>Pedido NBV - ${nomeCli}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* TEMA E ESTILOS */
+/* ESTILOS */
 :root{ --bg:#f8f9fa; --card:#ffffff; --text:#1f2937; --primary:#007bff; --success:#28a745; --border:#dee2e6; --warning:#ffc107; }
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:100px}
 .container{max-width:800px;margin:0 auto;padding:20px}
@@ -727,7 +697,6 @@ const App = {
         <div class="stepper"><button onclick="App.add('\${p.nome}',-1)">-</button><span>\${q}</span><button onclick="App.add('\${p.nome}',1)" style="background:var(--primary);color:white">+</button></div></div>\`;
     },
     
-    // NAVEGAÇÃO E AÇÕES
     toggleModalFotos() { this.state.modalOpen = !this.state.modalOpen; this.render(); },
     renderModal() {
         const svg = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(\`<svg width='150' height='150' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' transform='rotate(-45 75 75)' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='16' fill='#000' fill-opacity='0.3'>NBV</text></svg>\`);
@@ -765,7 +734,7 @@ const App = {
     setFrete(v) { this.state.frete = v; this.render(); },
     setPag(v) { this.state.pag = v; },
 
-    // CALCULOS (AGORA COM SUPORTE A CRÉDITOS)
+    // CALCULOS DE CRÉDITO
     calcAlbum(qtd) {
         const ts = [...new Set(this.data.tabelaFotolivros.map(t=>t.size))];
         const res = [];
@@ -783,7 +752,6 @@ const App = {
     calcTotal() {
         let t = 0, txt = "";
         
-        // Fotolivro
         if(this.state.mode==='album') {
             const q = this.state.sel.filter(s=>s.inAlbum).length;
             if(q>0) {
@@ -796,9 +764,8 @@ const App = {
             if(pd) { t += qtd*pd.preco; txt += \`💾 Pacote Digital: \${qtd} fotos (\${this.fmt(t)})\n\`; }
         }
         
-        // Itens Avulsos (Com Cálculo de Crédito)
         let av = "";
-        const creditosUsados = {}; // Rastreia o uso
+        const creditosUsados = {}; 
 
         this.state.sel.forEach((s,i) => {
             Object.keys(s.extras).forEach(k => {
@@ -807,8 +774,6 @@ const App = {
                 const p = this.data.produtosAvulsos.find(x=>x.nome===k);
                 if(p) { 
                     let qtdParaCobrar = s.extras[k];
-                    
-                    // Verifica Crédito
                     const credito = (this.data.cliente.creditos || []).find(c => c.item === k);
                     let infoCred = "";
                     
@@ -820,7 +785,7 @@ const App = {
                             const abatidos = Math.min(qtdParaCobrar, disponiveis);
                             qtdParaCobrar -= abatidos;
                             creditosUsados[k] = usados + abatidos;
-                            infoCred = \` (Included)\`; // Marca visualmente
+                            infoCred = \` (Incluso)\`; 
                         }
                     }
 
@@ -848,10 +813,8 @@ const App = {
 App.init();
 <\/script></body></html>`;
 
-            // 3. GERA O ZIP
             const zip = new JSZip();
             zip.file("index.html", clientHTML);
-            
             zip.generateAsync({type:"blob"}).then(function(content) {
                 saveAs(content, `Pedido_${nomeCli.replace(/\s+/g,'_')}.zip`);
             });
